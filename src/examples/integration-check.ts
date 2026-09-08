@@ -27,6 +27,6 @@ const host = new CordisPluginHost(); const run = await host.run('prod-agent', ve
 if (run.status !== 'completed' || trajectory.list(run.id).length !== 1) throw new Error('production cordis check failed');
 const ws = new FileWorkspaceStore('.tmp/workspace'); ws.write('root', 'ok.txt', 'ok'); if (ws.read('root', 'ok.txt') !== 'ok') throw new Error('workspace check failed');
 const teamFile = '.tmp/team.jsonl'; const board = new TeamBoard(new JsonlTeamStore(teamFile)); const task = board.createTask('demo'); board.updateTask(task.id, 1, 'completed', 'agent-1'); const reopenedTeam = new TeamBoard(new JsonlTeamStore(teamFile)); if (reopenedTeam.tasks[0]?.status !== 'completed') throw new Error('team persistence check failed');
-const sandbox = new LocalSandboxAdapter().create({ id: 'sbx-1', root: '.tmp/sandbox', network: 'none' }); sandbox.resolve('inside.txt'); try { sandbox.resolve('../escape'); throw new Error('sandbox escape check failed'); } catch (error) { if (!(error instanceof Error) || !error.message.includes('sandbox path escape')) throw error; }
+const sandbox = new LocalSandboxAdapter().create({ id: 'sbx-1', root: '.tmp/sandbox', network: 'full' }); sandbox.resolve('inside.txt'); try { sandbox.resolve('../escape'); throw new Error('sandbox escape check failed'); } catch (error) { if (!(error instanceof Error) || !error.message.includes('sandbox path escape')) throw error; }
 console.log({ ok: true, cordis: run.status, trajectory: trajectory.list(run.id).length, teamTask: task.status });
 

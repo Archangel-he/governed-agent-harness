@@ -1,23 +1,27 @@
-import { MemorySessionStore, MemoryTrajectoryStore } from '../../services/memory.js';
+﻿import { MemorySessionStore, MemoryTrajectoryStore } from '../../services/memory.js';
 import { AgentLoop } from '../agent-loop.js';
 import type { AgentKernel, KernelDependencies, KernelEvent, KernelInput, KernelResult } from '../../contracts/kernel.js';
-import type { SessionEvent } from '../../contracts/runtime.js';
+import { jsonSnapshot } from '../../services/log-value.js';
 
-/** One-turn kernel adapter: all state is local to run and returned as events. */
+/** One execution with explicit dependencies; durable event acknowledgement precedes effects. */
 export class StatelessAgentKernel implements AgentKernel {
-  async run(input: KernelInput, deps: KernelDependencies, signal = new AbortController().signal): Promise<KernelResult> {
-    const sessions = new MemorySessionStore();
-    const trajectoryStore = new MemoryTrajectoryStore();
-    const events: KernelEvent[] = [];
-    const sessionId = `kernel-${input.executionId}`;
-    const loop = new AgentLoop(sessionId, input.version, sessions, { systemPrompt: input.systemPrompt, model: deps.model, tools: deps.tools, maxSteps: 16 }, { store: trajectoryStore, agentId: input.agentId });
-    const original = sessions.append.bind(sessions);
-    sessions.append = (event: SessionEvent) => { original(event); const row = { sequence: events.length + 1, executionId: input.executionId, type: event.type, payload: event.payload }; events.push(row); void deps.emit?.(row); };
-    const abort = new Promise<never>((_, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+  async run(input:KernelInput,deps:KernelDependencies,signal=new AbortController().signal):Promise<KernelResult> {
+    const events:KernelEvent[]=[];
+    if(signal.aborted)return {executionId:input.executionId,status:'cancelled',error:String(signal.reason),events,trajectory:[]};
+    const sessions=new MemorySessionStore(),trajectories=new MemoryTrajectoryStore();
+    const loop=new AgentLoop('kernel:'+input.executionId,input.version,sessions,{
+      systemPrompt:input.systemPrompt,model:deps.model,tools:deps.tools,maxSteps:deps.maxSteps??16,maxRetries:deps.maxRetries,requestErrorHandlers:deps.requestErrorHandlers,retryDelayMs:deps.retryDelayMs,
+      eventSink:async event=>{
+        const row:KernelEvent={sequence:events.length+1,executionId:input.executionId,type:event.type,payload:jsonSnapshot(event.payload)};
+        await deps.emit?.(row);
+        events.push(row);
+      }
+    },{store:trajectories,agentId:input.agentId});
     try {
-      const result = await Promise.race([loop.run({ id: input.executionId, content: input.userContent }), abort]);
-      const executionId = String((events.find(event => event.type === 'turn/start')?.payload as { executionId?: string })?.executionId ?? input.executionId);
-      return { executionId, status: result.status === 'completed' ? 'completed' : result.status === 'cancelled' ? 'cancelled' : 'failed', ...(result.output === undefined ? {} : { output: result.output }), ...(result.error ? { error: result.error } : {}), events, trajectory: trajectoryStore.list(executionId) };
-    } catch (error) { const executionId = String((events.find(event => event.type === 'turn/start')?.payload as { executionId?: string })?.executionId ?? input.executionId); return { executionId, status: signal.aborted ? 'cancelled' : 'failed', error: String(error), events, trajectory: trajectoryStore.list(executionId) }; }
+      const result=await loop.run({id:input.executionId,executionId:input.executionId,content:input.userContent,signal});
+      return {executionId:input.executionId,status:result.status==='interrupted'?'failed':result.status,...(result.output===undefined?{}:{output:result.output}),...(result.error?{error:result.error}:{}),events,trajectory:trajectories.list(input.executionId)};
+    } catch(error) {
+      return {executionId:input.executionId,status:signal.aborted?'cancelled':'failed',error:String(error),events,trajectory:trajectories.list(input.executionId)};
+    }
   }
 }

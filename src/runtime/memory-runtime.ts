@@ -1,3 +1,4 @@
+import { releaseGate } from '../governance/release.js';
 ﻿import type {
   AgentVersion, CandidateExperiment, Execution, ReleaseDecision, TrajectoryEvent,
 } from '../contracts/domain.js';
@@ -32,13 +33,7 @@ export class InMemoryAgentRuntime {
   }
 
   decideRelease(candidate: CandidateExperiment, agentScore: number, threshold: number): ReleaseDecision {
-    candidate.agentScore = agentScore;
-    candidate.status = agentScore >= threshold ? 'accepted' : 'rejected';
-    return {
-      candidateId: candidate.id,
-      decision: candidate.status === 'accepted' ? 'release' : 'reject',
-      reason: `agent_score=${agentScore}, threshold=${threshold}`,
-    };
+    return releaseGate(candidate,agentScore,threshold);
   }
 }
 

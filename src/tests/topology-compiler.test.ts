@@ -9,6 +9,6 @@ test('compiles topology into deterministic execution stages', () => {
   assert.deepEqual(plan.stages, [['a'], ['b','c']]);
 });
 
-test('rejects cycles unless control self-loop', () => {
-  assert.throws(() => compileTopology({ id:'x', version:'1', entry:['a'], nodes:[{id:'a',kind:'capability'},{id:'b',kind:'capability'}], edges:[{from:'a',to:'b',kind:'data'},{from:'b',to:'a',kind:'data'}] }), /cycle/i);
+test('rejects execution cycles; loops require explicit bounds', () => {
+  assert.throws(() => compileTopology({ id:'x', version:'1', entry:['a'], nodes:[{id:'a',kind:'capability'},{id:'b',kind:'capability'}], edges:[{from:'a',to:'b',kind:'data'},{from:'b',to:'a',kind:'data'}] }), /cycle|incoming execution edge/i);
 });

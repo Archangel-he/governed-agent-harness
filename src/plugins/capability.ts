@@ -6,6 +6,7 @@ export interface PluginManifest {
   capabilitySurface: string;
   seatId?: string;
   sideEffects?: string[];
+  idempotent?: boolean;
 }
 
 export interface PluginEvent {
@@ -18,6 +19,9 @@ export interface CapabilityContext {
   readonly agentId: string;
   readonly agentVersionId: string;
   readonly nodeId: string;
+  readonly operationId?: string;
+  readonly signal?: AbortSignal;
+  readonly config?: Readonly<Record<string, unknown>>;
   readonly seatId?: string;
   readonly emit: (event: PluginEvent) => void;
 }
@@ -32,7 +36,9 @@ export interface PluginResult {
 export type ControlSignal =
   | { type: 'continue' }
   | { type: 'skip'; nodeIds: string[] }
-  | { type: 'stop'; reason: string };
+  | { type: 'stop'; reason: string }
+  | { type: 'select'; port: string }
+  | { type: 'loop' };
 
 export interface CapabilityPlugin<I = unknown> {
   manifest: PluginManifest;
@@ -44,3 +50,6 @@ export function definePlugin<I>(input: PluginManifest & { invoke: CapabilityPlug
   if (!manifest.id || !manifest.version) throw new Error('plugin id and version are required');
   return { manifest, invoke };
 }
+
+
+

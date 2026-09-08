@@ -1,3 +1,4 @@
+import type { TraceEvent as importTraceEvent } from '../trace/events.js';
 export type PluginKind = 'service' | 'event' | 'agent' | 'execution' | 'governance';
 export type { TopologyDefinition, TopologyNode, TopologyEdge } from '../topology/schema.js';
 export type RunStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -51,23 +52,12 @@ export interface Execution {
   rootRevisionAfter?: number;
 }
 
-export type TrajectoryStatus = 'started' | 'succeeded' | 'failed' | 'cancelled';
-
-export interface TrajectoryEvent {
-  id: string;
-  executionId: string;
-  agentId: string;
-  agentVersionId: string;
-  operationId: string;
-  parentOperationId?: string;
-  seatId?: string;
-  pluginId?: string;
-  pluginVersion?: string;
-  type: string;
-  status: TrajectoryStatus;
-  inputRef?: string;
-  outputRef?: string;
-  errorCode?: string;
+export type TrajectoryStatus = import('../trace/events.js').TraceStatus;
+/** Compatibility name for the canonical evidence event with required Agent identity. */
+export interface TrajectoryEvent extends importTraceEvent {
+  agentId:string;
+  agentVersionId:string;
+  errorCode?:string;
 }
 
 export interface GovernanceCluster {

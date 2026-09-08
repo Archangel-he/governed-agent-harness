@@ -1,79 +1,32 @@
-﻿# ARCHITECTURE_GAPS
+﻿# 当前边界与验证结论
 
-## 当前源码复核结论（目录整理后）
+本项目是单机、少量开发者使用的实验基座。目标是让人定义 `AgentVersion` 和自由能力拓扑，运行时自动装配 Cordis seat、能力插件、Kernel、Session、Artifact 和治理轨迹；一个 Agent 的所有插件轨迹由同一个 Trace 和评估报告综合分析，再通过候选版本实验发布或回滚。
 
-以下结论以本次通读源码为准。后面的“第一轮/第二轮/第三轮已完成”是历史进度叙述，部分表述过度，不应视为完整产品验收。源码迁移位置见 [代码导航](CODE_MAP.md)。
+## 本轮已闭合的六项审查缺口
 
-1. **运行路径尚未统一**：Kernel 包装 AgentLoop；拓扑执行器调用 CapabilityPlugin；Cordis Host 管理 LifecyclePlugin。这是三个独立入口，尚未形成“一个 AgentVersion 自动组装全部能力”的闭环。整理只区分契约、收拢目录，没有新增桥接功能。
-2. **自由拓扑尚未完整实现**：当前按阶段运行，上一阶段全部输出作为下一阶段输入；不是按具体数据边传递。`when`、ControlSignal、分支选择和有界循环未执行，自环控制边被编译器忽略。不能称为完整自由拓扑运行时。
-3. **Trace 与综合评估尚未统一**：Session projector 只处理五种模型/工具事件；TrajectoryEvent 和 TraceEvent 是两种结构。Aggregator 缺少完整状态转换约束；Agent 评估主要按事件计数，不能替代结果质量、多维评估和证据绑定的候选发布。
-4. **验收范围有限**：Decision/Tool 示例各只有两个确定性节点，不是设计中各六步的完整验收 Agent。当前测试与 smoke 通过只能证明已覆盖的行为；拓扑中断恢复、整体回归门禁未获得完整验证。
-5. **基础设施仍有具体实现缺口**：Registry Store 只恢复元数据与 Inbox，不自动重建 AgentLoop；基础 retry 和流式元数据保留不等于完整 DSH waterfall；子进程 cwd 不构成 OS 隔离；本地 Artifact/Version/Registry Store 的输入校验、并发及崩溃恢复还需加强。
-6. **保留的早期实现**：`runtime/memory-runtime.ts` 仍有演示级发布逻辑；它与 `governance/release.ts` 尚未合并。Kernel 的取消传播与监听器清理需要单独修复。此次结构整理保留原行为，不把这些功能修复混在移动文件的提交中。
+1. `GovernedAgentRuntime` 是统一入口。它冻结版本和输入，预检全部插件/绑定，创建 Cordis 上下文和 seat fiber，执行拓扑节点；Kernel 节点通过 `StatelessAgentKernel` 进入同一 Session/Trace。Lifecycle seat 也可按绑定接入并在 fiber dispose 时释放。
+2. 拓扑按边传递数据，支持并行 fork、按 `when` 选择分支、join 输入、`continue/skip/stop/select/loop` 控制信号、节点有界循环、失败策略、输入输出 Schema 和插件版本预检。执行环必须用节点的有限 `loop` 表达；任意图环被拒绝。
+3. Session 事件和拓扑事件都投影为可重建 `TraceEvent`。Aggregator 拒绝缺失 start、重复 terminal、错误依赖和终态后的事实。Agent 评估从事件重建完整性、可靠性、质量、安全、成本、延迟、重试和人工介入指标；Experiment 用相同输入回放 baseline/candidate，证据摘要绑定版本并在候选激活前持久化不可变 release evidence。
+4. `src/examples/acceptance.ts` 运行六步 Decision 和六步 Tool Agent，覆盖统一运行、Kernel、工具、Trace、质量门禁、候选发布和回滚。另有进程被杀后的未知副作用恢复测试和全量 `npm run verify`。
+5. Loop 支持 usage/replayState/request header、流式 tool delta 组装、完整帧检查、可取消 retry waterfall 和事件先持久化；Registry 支持独立 Agent Session、Inbox 去重、peek/ack、冷恢复和 Lead 管理；Artifact/Version/Registry/JSONL 均校验输入并使用原子写入及并发锁；Docker sandbox 真实执行网络、根文件系统、capability、CPU、内存、PID、输出、超时和取消限制。
+6. 早期 `memory-runtime` 的发布入口委托统一 `releaseGate`；Kernel 的取消监听器和事件队列会清理；完成、失败、取消、未知外部效果都写入终态或中断证据。
 
-上述是代码工作，不是只能由外部平台解决的问题。OS runner 安装、真实 Provider 凭据等才是另外的环境依赖。后续应按这些具体缺口继续实现和验证。
+## 有意保留的实验边界
 
-## 历史进度记录
+- Docker 是本机实验 runner；只支持 `none` 和 `full`，`restricted` 明确失败关闭。没有为 Linux/Windows/macOS 分别实现 bwrap、Landlock、ACL 等另一套 runner。
+- JSONL 是单机参考持久化。锁在并发争抢或不明确的 owner 状态下失败关闭；没有 SQLite、跨主机租约或多租户协议。
+- 真实模型、MCP、Skill、外部 Tool 权限和网络 provider 仍由调用者作为插件提供；仓库只验证它们必须遵守的契约。
+- 拓扑由人定义，运行时不会自行拆 Agent 或自行改写插件拓扑。迟到的插件事实会以 `harness/late` 记录在 Session，不伪造已结束 operation 的 Trace 终态。
 
-本文件原先记录第一轮骨架中尚未可靠实现、或必须由具体部署/业务决定的内容。历史路径请参考代码导航中的迁移表。
+## 参考与验收
 
-## 第一轮已完成
+实现参考为当前 DeepSeek Harness `c389f96bf3a9b6807cb71ed6bdad5849be0df6d8` 和 Cordis。运行：
 
-- `AgentKernel` 统一契约和 `StatelessAgentKernel` 最小实现。
-- DSH 风格 Session Event Log、恢复、中断收束、工具调用记录。
-- 基础流式 chunk、assistant attempt 和有限 retry。
-- Agent Registry、Inbox 去重、冷恢复入口。
-- 每个 Plugin Seat 独立 Cordis Fiber。
-- Session 到 Trajectory 的统一基础投影。
-- 插件轨迹统计、失败发现和优化候选接入现有 Replay/Release。
-- `src/examples/minimal-divergence.ts` 可直接运行，展示最小分化路径。
-- JSONL 原子追加、generation 元数据、失效 writer lock 接管。
+```text
+npm run check
+npm test
+npm run acceptance
+npm run verify
+```
 
-## 尚未完成
-
-1. DSH 完整 assistant stream frame、usage、replayState、request header 和 waterfall 扩展点。
-2. bwrap、Landlock、Seatbelt、Windows ACL 等 OS runner 的实际二进制接入；无 runner 时只做失败关闭。
-3. 正式 Cordis workspace 依赖替换当前 npm 兼容层。
-4. 完整 Team Lead 权限、独立 Agent 运行时启动/停止和跨进程 mailbox。
-5. 生产级 SQLite/generation migration、跨进程租约和崩溃恢复验证。
-6. Report、Proposal、Ack、Lease、轨迹聚类和候选发布门禁等 Agent Brick 专属治理协议。
-7. 真实 Provider、Tool Schema Registry、Permission Gate、MCP、Skill 和 CLI Bridge。
-
-## 参考基线
-
-技术实现参考：DeepSeek Harness/Cordis。
-当前核对源码：`C:\Users\123\deepseek-harness-current`，commit `c389f96bf3a9b6807cb71ed6bdad5849be0df6d8`。
-
-## 2026-09-08 实现进度
-
-已验证：
-- `src/topology/schema.ts`：自由拓扑节点/边契约、重复 ID、入口和断边校验。
-- `src/topology/compiler.ts`：确定性分阶段编译和数据边环检测。
-- `src/plugins/contract.ts`：插件 manifest、上下文、结果、控制信号和事件发射契约。
-- `src/runtime/topology-executor.ts`：阶段并行执行、节点事件、插件事件和失败事件统一输出。
-- `src/services/artifact-store.ts`：本地 SHA-256 内容寻址 ArtifactStore。
-- `src/examples/acceptance.ts`：Decision/Tool 两种拓扑验收通过。
-
-仍未声称完成：完整 DSH 流式 waterfall、完整 Agent 级评估/候选回放发布、独立冷恢复 Agent Registry、OS 级 Sandbox、正式 Cordis workspace 依赖、跨进程持久化治理协议。这些仍按本文前面的缺口处理。
-
-## 2026-09-08 第二轮实现进度
-
-已验证：
-- `src/trace/events.ts` 与 `src/trace/aggregator.ts`：稳定全局序号、操作聚合、重复事件拒绝、缺失终态保持 incomplete。
-- `src/governance/agent-evaluator.ts`：跨插件 Agent 级成功率、操作数、插件数、失败数和完成度汇总。
-- `src/services/version-store.ts`：不可变版本快照、active 指针原子写入、回滚。
-- `src/governance/replay.ts` 与 `release.ts` 的已有 compare/release gate 已纳入当前验证链。
-- `npm run verify`：21 个测试全部通过，Decision/Tool acceptance 通过。
-
-当前仍需后续增强的仅包括 DSH/平台边界：完整 provider stream/waterfall 兼容、真实 OS 隔离 runner、正式 Cordis workspace 依赖、跨进程 Team/Registry、SQLite 迁移和真实外部 Provider/Tool/MCP 接入。单机实验版核心骨架已覆盖本阶段目标。
-
-## 2026-09-08 第三轮实现进度
-
-本轮已实现并验证：
-- AgentLoop stream frame 的 `usage`、`replayState`、`requestHeader` 保留，并继续支持 retry waterfall。
-- `PersistentAgentRegistry`：本地原子 JSON 状态、Agent 注册、Inbox 去重、冷启动恢复。
-- `LocalSandboxAdapter`：允许网络全开时的真实子进程执行；路径边界仍强制检查；无 OS 网络隔离 runner 时继续失败关闭。
-- 24 个测试、类型检查和 acceptance 全部通过。
-
-因此原缺口 1 的本地兼容部分、缺口 4 的单进程冷恢复部分和缺口 2 的子进程执行部分已下沉到实现。仍未声称具备的是外部平台提供的真实网络/资源隔离、正式 Cordis workspace、跨进程 mailbox/lease、SQLite 迁移以及真实 Provider/Tool/MCP 接入。
-
+当前验收包含 57+ 个测试（其中 Docker 测试使用本机 Docker daemon），实际数量以 `npm test` 输出为准。
