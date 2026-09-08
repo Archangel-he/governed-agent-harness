@@ -1,0 +1,23 @@
+﻿{
+    "name":  "governed-agent-harness",
+    "private":  true,
+    "type":  "module",
+    "scripts":  {
+                    "check":  "tsc --noEmit",
+                    "demo":  "tsx src/examples/demo.ts",
+                    "skeleton":  "tsx src/examples/skeleton-check.ts",
+                    "production":  "tsx src/examples/production-check.ts",
+                    "minimal":  "tsx src/examples/minimal-divergence.ts",
+                    "test":  "tsx --test src/tests/*.test.ts",
+                    "verify":  "npm run check \u0026\u0026 npm test \u0026\u0026 npm run acceptance \u0026\u0026 npm run demo \u0026\u0026 npm run skeleton \u0026\u0026 npm run production \u0026\u0026 npm run minimal",
+                    "acceptance":  "tsx src/examples/acceptance.ts"
+                },
+    "devDependencies":  {
+                            "@types/node":  "^26.5.0",
+                            "tsx":  "^4.0.0",
+                            "typescript":  "^5.0.0"
+                        },
+    "dependencies":  {
+                         "cordis":  "^4.0.0-rc.9"
+                     }
+}
