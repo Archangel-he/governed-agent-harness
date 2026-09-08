@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TopologyExecutor } from '../runtime/topology-executor.js';
-import { definePlugin } from '../plugins/contract.js';
+import { TopologyExecutor } from '../topology/executor.js';
+import { definePlugin } from '../plugins/capability.js';
 
 test('executes stages and emits unified node trace', async () => {
   const events: any[] = [];

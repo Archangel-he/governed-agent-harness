@@ -1,4 +1,4 @@
-import type { TrajectoryEvent } from '../contracts.js';
+import type { TrajectoryEvent } from '../contracts/domain.js';
 
 export interface AgentEvaluation {
   successRate: number;

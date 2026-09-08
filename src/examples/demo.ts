@@ -1,5 +1,5 @@
-﻿import { InMemoryAgentRuntime } from '../runtime/index.js';
-import type { AgentVersion, CandidateExperiment } from '../contracts.js';
+﻿import { InMemoryAgentRuntime } from '../runtime/memory-runtime.js';
+import type { AgentVersion, CandidateExperiment } from '../contracts/domain.js';
 
 const version: AgentVersion = {
   id: 'agent-v1', agentDefinitionId: 'example-agent', policyVersion: 'policy-v1',

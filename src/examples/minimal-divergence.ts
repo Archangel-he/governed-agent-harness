@@ -1,6 +1,6 @@
-﻿import { StatelessAgentKernel } from '../kernel/stateless.js';
+﻿import { StatelessAgentKernel } from '../runtime/kernel/stateless.js';
 import { analyzeTrajectory } from '../governance/analyzer.js';
-import type { AgentVersion } from '../contracts.js';
+import type { AgentVersion } from '../contracts/domain.js';
 
 const version: AgentVersion = { id: 'minimal-v1', agentDefinitionId: 'minimal', policyVersion: 'p1', bindings: [] };
 const result = await new StatelessAgentKernel().run({ executionId: 'minimal-run', agentId: 'minimal-agent', version, systemPrompt: 'Answer briefly.', userContent: 'hello' }, {

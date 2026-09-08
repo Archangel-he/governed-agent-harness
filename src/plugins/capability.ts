@@ -1,3 +1,5 @@
+import type { ArtifactRef } from '../contracts/artifact.js';
+
 export interface PluginManifest {
   id: string;
   version: string;
@@ -11,7 +13,7 @@ export interface PluginEvent {
   payload?: unknown;
 }
 
-export interface PluginContext {
+export interface CapabilityContext {
   readonly executionId: string;
   readonly agentId: string;
   readonly agentVersionId: string;
@@ -26,23 +28,18 @@ export interface PluginResult {
   control?: ControlSignal;
 }
 
-export interface ArtifactRef {
-  hash: string;
-  mediaType: string;
-  size: number;
-}
 
 export type ControlSignal =
   | { type: 'continue' }
   | { type: 'skip'; nodeIds: string[] }
   | { type: 'stop'; reason: string };
 
-export interface AgentPlugin<I = unknown> {
+export interface CapabilityPlugin<I = unknown> {
   manifest: PluginManifest;
-  invoke(input: I, context: PluginContext): Promise<PluginResult>;
+  invoke(input: I, context: CapabilityContext): Promise<PluginResult>;
 }
 
-export function definePlugin<I>(input: PluginManifest & { invoke: AgentPlugin<I>['invoke'] }): AgentPlugin<I> {
+export function definePlugin<I>(input: PluginManifest & { invoke: CapabilityPlugin<I>['invoke'] }): CapabilityPlugin<I> {
   const { invoke, ...manifest } = input;
   if (!manifest.id || !manifest.version) throw new Error('plugin id and version are required');
   return { manifest, invoke };

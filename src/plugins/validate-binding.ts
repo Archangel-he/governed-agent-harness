@@ -1,4 +1,4 @@
-import type { PluginBinding, PluginSeat } from '../contracts.js';
+import type { PluginBinding, PluginSeat } from '../contracts/domain.js';
 export function validateBinding(seat: PluginSeat, binding: PluginBinding): void {
   if (seat.id !== binding.seatId) throw new Error(`seat mismatch: ${binding.seatId}`);
   if (seat.contract !== binding.plugin.contract) throw new Error(`contract mismatch: ${seat.contract} != ${binding.plugin.contract}`);

@@ -1,4 +1,4 @@
-import type { CandidateExperiment } from '../contracts.js';
+import type { CandidateExperiment } from '../contracts/domain.js';
 
 export interface ReplayCase<TInput, TOutput> { id: string; input: TInput; expected?: TOutput; }
 export interface ReplayResult { versionId: string; score: number; passed: number; total: number; }

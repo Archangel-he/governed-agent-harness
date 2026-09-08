@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { AgentLoop, type LoopOptions } from '../runtime/agent-loop.js';
 import { JsonlSessionStore, FileWorkspaceStore } from '../services/file-store.js';
 import { MemorySessionStore } from '../services/memory.js';
-import type { AgentVersion } from '../contracts.js';
+import type { AgentVersion } from '../contracts/domain.js';
 
 const version: AgentVersion = { id: 'v1', agentDefinitionId: 'test', policyVersion: 'p1', bindings: [] };
 const identity = { seatId: 'model', pluginId: 'model', pluginVersion: '1' };

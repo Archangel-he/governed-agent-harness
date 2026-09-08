@@ -1,36 +1,47 @@
-﻿# Governed Agent Harness
+# Governed Agent Harness
 
-面向生产的 Agent 运行与演进框架。核心是冻结运行组成、由人定义可细分的能力拓扑、汇总完整 Agent 轨迹综合评估，并通过候选实验与发布门禁推动优化。
+供少量开发者单机部署、实验的 Agent 运行与治理框架原型。设计目标是由人定义能力插件拓扑，汇总一个 Agent 的完整轨迹，再通过综合评估和候选实验改进插件与拓扑。
 
-**当前状态：早期实现，尚未通过生产级验收。** 示例和检查通过只说明相应路径可运行，不等于已完成可靠持久化、OS 隔离、完整协作及综合治理。
+当前已有独立可运行的 AgentLoop、拓扑执行、Cordis 插件生命周期、轨迹统计及版本存储模块。这些模块尚未全部连接成统一产品；示例通过不代表自由分支/循环、完整治理闭环或 OS 隔离已经实现。
 
-- [产品与架构规范](docs/GOVERNED_AGENT_HARNESS_SPEC.md)：产品定位、最终设计原则、能力边界和生产验收标准。
-- [工程缺口记录](docs/ARCHITECTURE_GAPS.md)：待补实现及待决策事项。
+技术参考：DeepSeek Harness / Cordis。包名为 `governed-agent-harness`，本地目录仍为 `agent-brick-design`。
 
-技术实现参考为 DeepSeek Harness/Cordis。仓库目录与 npm 包名暂沿用现状。
-
-## 本地运行
+## 运行
 
 ```sh
 npm install
 npm run minimal
+npm run acceptance
 npm run verify
 ```
 
-minimal 是最小执行示例；verify 包含类型检查、现有测试及示例。production 为历史脚本名称，不是生产认证。
+- `minimal`：一次 Kernel → AgentLoop → Session/Trajectory 调用。
+- `acceptance`：两个各含两节点的确定性拓扑示例与 Trace 聚合检查。
+- `integration`：Cordis、工具调用、文件 Store、Team 的组合冒烟检查。
+- `verify`：类型检查、测试及全部示例。`production` 保留为 `integration` 的旧命令别名。
+
+## 阅读顺序
+
+1. [代码导航](docs/CODE_MAP.md)：实际目录职责、调用路径和改动入口。
+2. [产品与架构规范](docs/GOVERNED_AGENT_HARNESS_SPEC.md)：目标设计。
+3. [工程缺口](docs/ARCHITECTURE_GAPS.md)：当前实现边界与历史记录。
 
 ## 目录
 
-- `src/contracts`：Agent 与运行时契约
-- `src/topology`：自由拓扑定义、校验、编译与执行
-- `src/plugins`：插件契约与注册
-- `src/runtime`：Agent Loop、Registry、Recovery、Cordis Host
-- `src/trace`：统一 Agent Trace
-- `src/evaluation`：Agent 级评估与候选实验
-- `src/governance`：Replay、Compare、Release Gate
-- `src/services`：Session、Trajectory、Artifact、Version 等本地服务
-- `src/sandbox`：本地 Sandbox 适配
-- `src/team`：多 Agent 协作基础设施
-- `src/examples`：可运行示例与验收入口
-- `src/tests`：自动化测试
-- `docs`：架构规范与缺口记录
+```text
+src/
+  contracts/       共享数据、服务、Loop、Kernel 契约
+  plugins/         能力插件、生命周期插件与插件座绑定校验
+  topology/        拓扑定义、校验、编译、执行
+  runtime/         AgentLoop、Host、Registry、恢复与版本校验
+    kernel/       一次执行的 Kernel 适配器
+  trace/           Trace 聚合与 Session → Trajectory 投影
+  governance/      Agent/Cluster 统计、分析、Replay、Release Gate
+  services/        内存与文件存储、Gateway、版本和 Registry 快照
+  sandbox/         本地工作目录及子进程适配器
+  team/            Team 消息与任务板
+  examples/        可运行示例和冒烟检查
+  tests/           自动化测试
+  types/           Cordis 临时类型声明
+docs/             设计、代码导航、缺口与历史计划
+```

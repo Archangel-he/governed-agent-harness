@@ -1,5 +1,5 @@
 export type PluginKind = 'service' | 'event' | 'agent' | 'execution' | 'governance';
-export type { TopologyDefinition, TopologyNode, TopologyEdge } from './topology/schema.js';
+export type { TopologyDefinition, TopologyNode, TopologyEdge } from '../topology/schema.js';
 export type RunStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 export interface PluginDefinition {
@@ -31,7 +31,7 @@ export interface AgentVersion {
   seats?: PluginSeat[];
   bindings: PluginBinding[];
   policyVersion: string;
-  topology?: import('./topology/schema.js').TopologyDefinition;
+  topology?: import('../topology/schema.js').TopologyDefinition;
 }
 
 export interface AgentInstance {

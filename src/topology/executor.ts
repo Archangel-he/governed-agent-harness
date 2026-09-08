@@ -1,10 +1,10 @@
-import { compileTopology } from '../topology/compiler.js';
-import type { TopologyDefinition } from '../topology/schema.js';
-import type { AgentPlugin, PluginEvent, PluginResult } from '../plugins/contract.js';
+import { compileTopology } from './compiler.js';
+import type { TopologyDefinition } from './schema.js';
+import type { CapabilityPlugin, PluginEvent, PluginResult } from '../plugins/capability.js';
 
 interface ExecutorOptions {
   agentId: string; agentVersionId: string; executionId: string;
-  plugins: Map<string, AgentPlugin>; emit: (event: Record<string, unknown>) => void;
+  plugins: Map<string, CapabilityPlugin>; emit: (event: Record<string, unknown>) => void;
 }
 
 export class TopologyExecutor {

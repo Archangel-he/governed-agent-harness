@@ -1,5 +1,5 @@
 import type { SessionEvent, TrajectoryStore } from '../contracts/runtime.js';
-import type { AgentVersion } from '../contracts.js';
+import type { AgentVersion } from '../contracts/domain.js';
 
 /** Projects model-visible execution facts into the governance trajectory. */
 export class SessionTrajectoryProjector {

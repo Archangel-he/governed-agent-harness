@@ -1,5 +1,5 @@
-﻿import { definePlugin } from '../plugins/contract.js';
-import { TopologyExecutor } from '../runtime/topology-executor.js';
+﻿import { definePlugin } from '../plugins/capability.js';
+import { TopologyExecutor } from '../topology/executor.js';
 import { AgentTraceAggregator } from '../trace/aggregator.js';
 
 const run = async () => {

@@ -1,4 +1,4 @@
-import type { TrajectoryEvent } from '../contracts.js';
+import type { TrajectoryEvent } from '../contracts/domain.js';
 export interface PluginStats { seatId: string; pluginId: string; calls: number; successes: number; failures: number; successRate: number; }
 export interface TrajectoryFinding { seatId: string; pluginId: string; statement: string; severity: 'info' | 'warning'; }
 export function analyzeTrajectory(events: TrajectoryEvent[]): { stats: PluginStats[]; findings: TrajectoryFinding[] } {

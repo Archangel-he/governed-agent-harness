@@ -1,5 +1,5 @@
 import type { SessionEvent, SessionStore, TrajectoryStore, WorkspaceStore } from '../contracts/runtime.js';
-import type { TrajectoryEvent } from '../contracts.js';
+import type { TrajectoryEvent } from '../contracts/domain.js';
 import { jsonSnapshot, validateSessionEvent } from './log-value.js';
 
 export class MemorySessionStore implements SessionStore {

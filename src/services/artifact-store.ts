@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export interface ArtifactRecord { hash: string; mediaType: string; size: number; }
+import type { ArtifactRef } from '../contracts/artifact.js';
 
 export class LocalArtifactStore {
   constructor(private readonly root: string) { mkdirSync(root, { recursive: true }); }
-  async put(content: Buffer, mediaType: string): Promise<ArtifactRecord> {
+  async put(content: Buffer, mediaType: string): Promise<ArtifactRef> {
     const hash = createHash('sha256').update(content).digest('hex');
     const file = join(this.root, hash);
     if (!existsSync(file)) writeFileSync(file, content, { flag: 'wx' });

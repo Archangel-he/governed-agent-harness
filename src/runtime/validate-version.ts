@@ -1,5 +1,5 @@
-import type { AgentVersion } from '../contracts.js';
-import { validateBinding } from './validate.js';
+import type { AgentVersion } from '../contracts/domain.js';
+import { validateBinding } from '../plugins/validate-binding.js';
 export function validateVersion(version: AgentVersion): void {
   const seats = version.seats ?? [];
   const ids = new Set<string>();

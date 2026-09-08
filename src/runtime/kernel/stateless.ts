@@ -1,8 +1,7 @@
-import { MemorySessionStore } from '../services/memory.js';
-import { AgentLoop } from '../runtime/agent-loop.js';
-import type { AgentKernel, KernelDependencies, KernelEvent, KernelInput, KernelResult } from './contracts.js';
-import type { SessionEvent } from '../contracts/runtime.js';
-import { MemoryTrajectoryStore } from '../services/memory.js';
+import { MemorySessionStore, MemoryTrajectoryStore } from '../../services/memory.js';
+import { AgentLoop } from '../agent-loop.js';
+import type { AgentKernel, KernelDependencies, KernelEvent, KernelInput, KernelResult } from '../../contracts/kernel.js';
+import type { SessionEvent } from '../../contracts/runtime.js';
 
 /** One-turn kernel adapter: all state is local to run and returned as events. */
 export class StatelessAgentKernel implements AgentKernel {

@@ -1,6 +1,6 @@
 ﻿import type {
   AgentVersion, CandidateExperiment, Execution, ReleaseDecision, TrajectoryEvent,
-} from '../contracts.js';
+} from '../contracts/domain.js';
 
 export class InMemoryAgentRuntime {
   readonly events: TrajectoryEvent[] = [];

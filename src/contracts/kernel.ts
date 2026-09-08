@@ -1,5 +1,5 @@
-import type { AgentVersion, TrajectoryEvent } from '../contracts.js';
-import type { ModelProvider, ToolProvider } from '../runtime/agent-loop.js';
+import type { AgentVersion, TrajectoryEvent } from './domain.js';
+import type { ModelProvider, ToolProvider } from './loop.js';
 
 export interface KernelInput { executionId: string; agentId: string; version: AgentVersion; userContent: unknown; systemPrompt: string; }
 export interface KernelDependencies { model: ModelProvider; tools: Record<string, ToolProvider>; emit?(event: KernelEvent): void | Promise<void>; }

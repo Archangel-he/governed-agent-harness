@@ -1,4 +1,4 @@
-import type { Execution } from '../contracts.js';
+import type { Execution } from '../contracts/domain.js';
 import type { RecoveryRecord } from '../contracts/runtime.js';
 
 export function recoverExecution(execution: Execution, attempts: number, retryable: boolean, reason: string): RecoveryRecord {

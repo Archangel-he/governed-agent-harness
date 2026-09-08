@@ -1,4 +1,4 @@
-import type { CandidateExperiment, GovernanceCluster, TrajectoryEvent } from '../contracts.js';
+import type { CandidateExperiment, GovernanceCluster, TrajectoryEvent } from '../contracts/domain.js';
 export interface ClusterEvaluation { clusterId: string; score: number; observations: string[]; }
 export function evaluateCluster(cluster: GovernanceCluster, events: TrajectoryEvent[]): ClusterEvaluation {
   const relevant = events.filter(e => e.seatId !== undefined && cluster.seatIds.includes(e.seatId));

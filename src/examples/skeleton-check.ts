@@ -1,13 +1,13 @@
 ﻿import { runGenericAgent } from './generic-agent.js';
-import { evaluateCluster, makeCandidate } from '../governance/evaluator.js';
+import { evaluateCluster, makeCandidate } from '../governance/cluster-evaluator.js';
 import { releaseGate } from '../governance/release.js';
 import { MemoryRootSession, RevisionConflict } from '../services/session.js';
 import { CapabilityError, MemoryGateway } from '../services/gateway.js';
 import { recoverExecution } from '../runtime/recovery.js';
 import { compare } from '../governance/replay.js';
-import type { Execution } from '../contracts.js';
-import { validateBinding } from '../runtime/validate.js';
-import { validateVersion } from '../runtime/version.js';
+import type { Execution } from '../contracts/domain.js';
+import { validateBinding } from '../plugins/validate-binding.js';
+import { validateVersion } from '../runtime/validate-version.js';
 const count = await runGenericAgent();
 if (count !== 1) throw new Error(`expected one trajectory event, got ${count}`);
 const candidate = makeCandidate('candidate-1', 'v1', 'v2', 'hypothesis-1');

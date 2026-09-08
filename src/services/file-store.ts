@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, closeSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import type { SessionEvent, SessionStore, TrajectoryStore, WorkspaceStore } from '../contracts/runtime.js';
-import type { TrajectoryEvent } from '../contracts.js';
+import type { TrajectoryEvent } from '../contracts/domain.js';
 import { jsonSnapshot, validateSessionEvent } from './log-value.js';
 
 function missing(error: unknown): boolean { return (error as NodeJS.ErrnoException).code === 'ENOENT'; }

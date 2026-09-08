@@ -1,4 +1,4 @@
-import type { CandidateExperiment, ReleaseDecision } from '../contracts.js';
+import type { CandidateExperiment, ReleaseDecision } from '../contracts/domain.js';
 export interface ReleasePolicy { minScore: number; maxCost?: number; maxErrorRate?: number; sampleCount: number; minSamples: number; }
 export function releaseGate(candidate: CandidateExperiment, score: number, thresholdOrPolicy: number | ReleasePolicy, cost = 0, errorRate = 0): ReleaseDecision {
   const policy: ReleasePolicy = typeof thresholdOrPolicy === 'number' ? { minScore: thresholdOrPolicy, sampleCount: 1, minSamples: 1 } : thresholdOrPolicy;
