@@ -12,7 +12,7 @@
 
 | 文件／目录 | 职责 |
 | --- | --- |
-| `agent.ts` | 模板装配、固定记忆、运行、评估、候选比较 |
+| `agent.ts` | 模板装配、固定记忆、版本化评价包、运行、评估、候选比较 |
 | `templates/text-agent.ts` | 可复制的 Agent 定义；用新文件分化 Agent |
 | `contracts` | AgentVersion、模型／工具、Kernel 和服务数据契约 |
 | `plugins` | 能力调用和生命周期契约、插件座绑定校验 |
@@ -21,7 +21,7 @@
 | `runtime/evidence-source.ts` | 从指定 Agent Session 重建来源，校验请求摘要与轨迹终态摘要 |
 | `runtime/agent-loop.ts` | 流式模型、工具流水线、retry waterfall、取消和 Session 重建 |
 | `trace` | 严格 operation 状态机，统一 Session 投影 |
-| `governance/evaluation.ts` | 全 Agent 门禁；尝试失败、最终失败和未知副作用分别计量 |
+| `governance/evaluation.ts` | 全 Agent 门禁；尝试失败、最终失败和未知副作用分别计量  |`n| `governance/evaluation-package.ts` | Evaluator、Dataset、Gates 的版本化契约和 digest |
 | `governance/attribution.ts` | 依赖＋实际输入输出形成假设，单节点对照干预验证 |
 | `governance/experiment.ts` | 来源事件核验、成对实验、评估器锁定、发布前重验与 CAS |
 | `memory/wiki.ts` | 不可变来源、提案、CAS 发布、版本页面、索引、链接检查 |

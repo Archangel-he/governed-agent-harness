@@ -135,6 +135,13 @@ Observation（事实）→ Finding（归纳）→ Hypothesis（待验证解释�
 
 局部提升但整体关键指标回退时拒绝发布。评价准则事先固定；分析器不得事后修改评分标准来通过候选。回滚版本不能撤销已经发生的外部副作用，副作用恢复必须另有业务协议。
 
+## 8.5 Agent 专属评价包
+
+评价标准不是框架的单一全局分数。每个可发布的 AgentTemplate 必须携带一个版本化 `EvaluationPackage`：`Evaluator` 定义业务判断，`EvaluationDataset` 定义带稳定 ID 和版本的任务案例，`Gates` 定义通用运行指标与该 Agent 的发布门禁。装配器冻结三者并生成 `evaluationDigest`，写入 AgentVersion。
+
+候选实验默认使用该 Dataset；若指定案例，案例 ID、输入和 expected 仍须来自同一数据集版本。基线和候选使用同一 Evaluator、Dataset、Gates、环境和记忆摘要。评价器实现摘要、数据集摘要和门禁摘要进入实验证据，发布前重新核验。切换评价器或数据集会形成新的评价包，不能伪装成原 Agent 的插件优化。
+
+框架负责 Trace 完整性、未知副作用、最终状态、可靠性、成本、延迟和重试门禁；Evaluator 负责正确性、约束满足、证据质量、工具质量或协调质量等业务维度。不同 Agent 可以拥有完全不同的 Dataset 和维度，但都通过同一实验与发布协议。
 ## 9. Wiki 记忆
 
 每个 Agent 实例拥有一个 Wiki；所有插件按授权范围读取该 Agent 的共同记忆。插件可保留调用内的临时工作状态，但不各自建立长期知识孤岛。

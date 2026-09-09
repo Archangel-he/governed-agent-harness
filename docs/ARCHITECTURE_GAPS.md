@@ -13,6 +13,8 @@
 | P1 同一种 Agent | Supreme、两个 Leader、两个 Member 均执行完整 AgentVersion；独立 Session；原始报告核验、逐级验收、去重和冷恢复 | `team-hierarchy.test.ts`、`npm run team:acceptance` |
 | P1 分化模板 | 填写模板后 assembleAgent，运行、查看轨迹、评价与比较候选；不改核心 | `src/templates/text-agent.ts`、`npm run template` |
 
+每个 AgentTemplate 现在必须提供版本化 EvaluationPackage（Evaluator、Dataset、Gates）；装配生成 evaluationDigest，实验和发布核验评价包一致性。`evaluation-package.test.ts` 覆盖缺失包、冻结案例和 digest。
+
 Wiki 另外覆盖：来源 Artifact 内容校验、旧 release 不变、发布权限、CAS 冲突、跨实例一致读、scope 隔离、链接检查、Markdown/index/log 投影以及执行记忆固定。对应 `wiki-memory.test.ts` 和团队／模板验收。
 
 ## 使用与兼容边界
@@ -42,6 +44,6 @@ docker run --rm --network none governed-agent-harness:local
 
 ## 本轮实测记录（2026-09-09）
 
-`npm run verify` 退出码 0：82 项测试通过，0 失败、0 跳过；六步 Decision／Tool、模板归因实验、五 Agent 团队和兼容示例全部通过。
+`npm run verify` 退出码 0：86 项测试通过，0 失败、0 跳过；六步 Decision／Tool、模板归因实验、五 Agent 团队和兼容示例全部通过。
 
 应用 Docker 镜像构建退出码 0；以非 root 用户、`--network none --read-only` 和临时可写目录运行三组验收，退出码 0。原始输出保存在本地 `.tmp/verify-wiki-team.log` 与 `.tmp/docker-wiki-team.log`。源码复查确认本轮重要问题已修正；没有将确定性验收描述成真实模型业务质量认证。

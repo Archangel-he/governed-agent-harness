@@ -35,7 +35,7 @@ const result = await agent.run('stable-request-id', task);
 const evaluation = await agent.evaluate(result, task);
 ```
 
-模板包含版本、能力插件、数据／控制边、评估器，以及可选模型／工具服务。`assembleAgent` 暴露 `versions`、`wiki`、`resolver` 和 `compare`，完整示例见 [template-acceptance.ts](src/examples/template-acceptance.ts)。新增 Agent 无需修改核心运行时。
+模板包含版本、能力插件、数据／控制边、版本化 EvaluationPackage（Evaluator、Dataset、Gates）以及可选模型／工具服务。`assembleAgent` 暴露 `versions`、`wiki`、`resolver` 和 `compare`，完整示例见 [template-acceptance.ts](src/examples/template-acceptance.ts)。新增 Agent 无需修改核心运行时。
 
 插件共享该 Agent 的已发布 Wiki，临时工作状态留在调用中。Wiki 更新先引用原始来源并生成 proposal，再由范围所有者发布；新发布不会改变已经固定的执行记忆。团队示例见 [team-acceptance.ts](src/examples/team-acceptance.ts)。
 

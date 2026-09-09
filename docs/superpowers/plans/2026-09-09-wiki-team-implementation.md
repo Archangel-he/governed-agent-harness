@@ -1,4 +1,4 @@
-﻿# Unified Wiki and Team Implementation Plan
+# Unified Wiki and Team Implementation Plan
 
 > For agentic workers: use superpowers:subagent-driven-development; TDD, source review, and whole-branch verification.
 
@@ -44,7 +44,7 @@ Files: templates/text-agent.ts, examples/template-acceptance.ts, examples/team-a
 - Independent workers own only assigned files; root owns Team composition/integration/docs. No completion claim based solely on the previous 60 tests.
 
 ## Final verification (2026-09-09)
-- `npm run verify`: exit 0, 82 tests passed, 0 failed, 0 skipped; all six-step/template/team and compatibility examples passed.
+- `npm run verify`: exit 0, 86 tests passed, 0 failed, 0 skipped; all six-step/template/team and compatibility examples passed.
 - `docker build --pull=false -t governed-agent-harness:local .`: exit 0; Node 24.18.0 fixed base, non-root runtime.
 - `docker run --rm --network none --read-only --tmpfs /app/.tmp:uid=1000,gid=1000 --tmpfs /tmp governed-agent-harness:local`: exit 0; three acceptance suites passed.
 - Logs: `.tmp/verify-wiki-team.log`, `.tmp/docker-wiki-team.log` (local artifacts, not tracked).

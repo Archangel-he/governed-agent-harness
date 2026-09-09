@@ -32,6 +32,7 @@ export interface AgentVersion {
   seats?: PluginSeat[];
   bindings: PluginBinding[];
   policyVersion: string;
+  evaluationDigest?: string;
   topology?: import('../topology/schema.js').TopologyDefinition;
 }
 
