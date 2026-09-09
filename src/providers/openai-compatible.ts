@@ -12,5 +12,11 @@ export function createOpenAICompatibleModel(options:OpenAICompatibleOptions):Mod
   const message=body.choices?.[0]?.message;if(!message)throw new Error('Model provider returned no choice');
   const toolCalls=(message.tool_calls??[]).map(call=>{const fn=call.function;if(!call.id||!fn?.name)throw new Error('Model provider returned invalid tool call');let input:unknown={};try{input=fn.arguments?JSON.parse(fn.arguments):{}}catch{throw new Error('Model provider returned invalid tool arguments')}return{id:call.id,name:fn.name,input}});
   return {content:message.content??'',toolCalls, ...(body.usage===undefined?{}:{usage:body.usage})};
+ },stream:async function*(input:ModelInput,signal:AbortSignal){
+  const response=await fetch(endpoint,{method:'POST',signal,headers:{authorization:`Bearer ${options.apiKey}`,'content-type':'application/json'},body:JSON.stringify({model:options.model,messages:[{role:'system',content:input.systemPrompt},...input.history.map(message=>({role:message.role,content:typeof message.content==='string'?message.content:JSON.stringify(message.content)}))],stream:true})});
+  if(!response.ok||!response.body)throw new Error(`Model provider HTTP ${response.status} ${response.statusText}`);
+  const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='';
+  while(true){const {done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});const lines=buffer.split('\n');buffer=lines.pop()??'';for(const line of lines){const text=line.trim();if(!text.startsWith('data:'))continue;const data=text.slice(5).trim();if(data==='[DONE]'){yield {done:true};return}const chunk=JSON.parse(data) as {choices?:{delta?:{content?:string}}[];usage?:unknown};const delta=chunk.choices?.[0]?.delta;yield {...(delta?.content===undefined?{}:{content:delta.content}),...(chunk.usage===undefined?{}:{usage:chunk.usage})};}}
+  yield {done:true};
  }};
 }

@@ -1,5 +1,7 @@
 import {evidenceDigest} from './evaluation.js';
 import {freezeTopology} from '../topology/schema.js';
+import {appendFileSync,existsSync,mkdirSync,readFileSync} from 'node:fs';
+import {dirname} from 'node:path';
 
 export type FeedbackStatus = 'pending'|'scored'|'expired'|'invalid';
 export interface DecisionCase {id:string;input:unknown;output:unknown;decisionAt:number;metadata?:Record<string,unknown>}
@@ -11,28 +13,31 @@ export interface DynamicDatasetSnapshot extends DynamicDataset {snapshotAt:numbe
 /** In-memory reference store; replace only this boundary when persistence is needed. */
 export class DynamicEvaluationStore {
  private readonly items=new Map<string,DynamicCase>();
- constructor(readonly id:string,readonly version='1') {}
+ constructor(readonly id:string,readonly version='1',private readonly file?:string) {
+  if(file){mkdirSync(dirname(file),{recursive:true});if(existsSync(file)){for(const line of readFileSync(file,'utf8').split('\n').filter(Boolean)){const row=JSON.parse(line) as DynamicCase;this.items.set(row.id,freezeTopology(row));}}}
+ }
+ private persist(item:DynamicCase):void {if(this.file)appendFileSync(this.file,JSON.stringify(item)+'\n','utf8');}
  recordDecision(input:Omit<DecisionCase,'id'> & {id?:string}):DynamicCase {
   const id=input.id??crypto.randomUUID();
   if(this.items.has(id))throw new Error('Duplicate evaluation case');
   if(!Number.isFinite(input.decisionAt))throw new Error('Decision timestamp required');
-  const item=freezeTopology({...input,id,status:'pending' as const});this.items.set(id,item);return item;
+  const item=freezeTopology({...input,id,status:'pending' as const});this.items.set(id,item);this.persist(item);return item;
  }
  recordFeedback(feedback:FeedbackEvent):DynamicCase {
   const item=this.items.get(feedback.caseId);if(!item)throw new Error('Unknown evaluation case');
   if(item.status!=='pending')throw new Error('Evaluation case is already settled');
   if(!Number.isFinite(feedback.observedAt)||feedback.observedAt<item.decisionAt)throw new Error('Feedback precedes decision');
-  const next=freezeTopology({...item,feedback,status:'scored' as const});this.items.set(item.id,next);return next;
+  const next=freezeTopology({...item,feedback,status:'scored' as const});this.items.set(item.id,next);this.persist(next);return next;
  }
  expire(id:string):DynamicCase {
   const item=this.items.get(id);if(!item)throw new Error('Unknown evaluation case');
   if(item.status!=='pending')throw new Error('Evaluation case is already settled');
-  const next={...item,status:'expired' as const};this.items.set(id,next);return Object.freeze({...next});
+  const next=freezeTopology({...item,status:'expired' as const});this.items.set(id,next);this.persist(next);return next;
  }
  invalidate(id:string):DynamicCase {
   const item=this.items.get(id);if(!item)throw new Error('Unknown evaluation case');
   if(item.status!=='pending')throw new Error('Evaluation case is already settled');
-  const next={...item,status:'invalid' as const};this.items.set(id,next);return Object.freeze({...next});
+  const next=freezeTopology({...item,status:'invalid' as const});this.items.set(id,next);this.persist(next);return next;
  }
  snapshot(now=Date.now()):DynamicDatasetSnapshot {
   if(!Number.isFinite(now))throw new Error('Snapshot timestamp required');
