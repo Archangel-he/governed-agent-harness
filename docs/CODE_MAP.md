@@ -2,7 +2,7 @@
 
 ## 完整产品路径
 
-`templates/*.ts` → `agent.ts / assembleAgent` → `runtime/governed-runtime.ts` → Cordis seat Fiber → `topology/executor.ts` → CapabilityPlugin。
+`templates/*.ts` → `agent.ts / assembleAgent` → `runtime/governed-runtime.ts` → Cordis seat Fiber → `topology/executor.ts` → CapabilityPlugin。AgentTemplate 默认是无状态；`memoryMode: 'persistent'` 才启用 Episodic Memory。
 
 拓扑中的 Kernel 节点由同一运行时装配，进入 `runtime/kernel/stateless.ts` → `runtime/agent-loop.ts`。模型请求、工具调用、节点输入输出、Wiki 读取统一进入持久 Session 和 Trace。运行预检早于 request/start，生命周期实例仅创建一次并最终释放。
 
