@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {definePlugin} from '../plugins/capability.js';
+test('plugin category distinguishes optimizable capability from frozen infrastructure',()=>{assert.equal(definePlugin({id:'cap',version:'1',capabilitySurface:'planning',invoke:async()=>({})}).manifest.category,'capability');assert.equal(definePlugin({id:'store',version:'1',capabilitySurface:'persistence',category:'infrastructure',invoke:async()=>({})}).manifest.category,'infrastructure')});

@@ -1,6 +1,6 @@
 # Governed Agent Harness
 
-供少量开发者在单机 Docker 中运行实验的 Agent 基座。开发者定义能力插件、拓扑和评估器，框架负责 Cordis 装配、执行记录、Wiki 记忆、整 Agent 评估和候选发布。
+供少量开发者在单机 Docker 中运行实验的 Agent 基座。开发者定义能力插件、拓扑和评估器，框架负责 Cordis 装配、执行记录、Wiki 记忆、整 Agent 评估和候选发布。插件分为承载 Agent 行为的 `capability` 与提供运行基础的 `infrastructure`；轨迹优化默认只针对前者。
 
 核心链路：**人工定义能力拓扑 → Cordis 插件座 → 完整执行轨迹 → 综合归因假设 → 对照实验 → 发布／回滚**。Supreme、Team Leader、Member 都使用同一个完整 Agent 运行时。
 

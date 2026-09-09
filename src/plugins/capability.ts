@@ -7,6 +7,7 @@ export interface PluginManifest {
   seatId?: string;
   sideEffects?: string[];
   idempotent?: boolean;
+  category?: 'capability'|'infrastructure';
 }
 
 export interface PluginEvent {
@@ -49,7 +50,7 @@ export interface CapabilityPlugin<I = unknown> {
 export function definePlugin<I>(input: PluginManifest & { invoke: CapabilityPlugin<I>['invoke'] }): CapabilityPlugin<I> {
   const { invoke, ...manifest } = input;
   if (!manifest.id || !manifest.version) throw new Error('plugin id and version are required');
-  return { manifest, invoke };
+  return { manifest: {...manifest, category: manifest.category??'capability'}, invoke };
 }
 
 
