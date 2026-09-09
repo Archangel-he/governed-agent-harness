@@ -6,6 +6,7 @@ import {defaultProfile} from '../governance/evaluation.js';
 import {DynamicEvaluationStore} from '../governance/dynamic-evaluation.js';
 import {createOpenAICompatibleModel} from '../providers/openai-compatible.js';
 import type {ModelProvider} from '../contracts/loop.js';
+import {createStructuredLLMEvaluator} from '../governance/llm-judge.js';
 
 /** Paid model calls are opt-in; feedback is explicitly a simulated acceptance event. */
 export async function runModelFeedbackExperiment(root:string,model:ModelProvider,environment:Record<string,unknown>){
@@ -19,6 +20,7 @@ export async function runModelFeedbackExperiment(root:string,model:ModelProvider
   }}},
   services:{environmentSnapshot:environment,systemPrompt:'Follow the task precisely.',kernel:{model,tools:{},maxSteps:1,maxRetries:0}}
  };
+ definition.llmEvaluator=createStructuredLLMEvaluator(model,{id:'model-feedback-rubric',version:'1',dimensions:[{id:'task-completion',description:'Whether the output fulfills the requested task exactly.',minScore:0,maxScore:4,anchors:{'0':'does not fulfill','2':'partially fulfills','4':'fully fulfills'},requiredEvidence:['model/response','execution/end']} ]});
  const agent=assembleAgent(root,definition);
  const result=await agent.run(crypto.randomUUID(),task,{signal:AbortSignal.timeout(45_000)});
  const source=await agent.resolver.resolve(result.executionId);
@@ -28,7 +30,7 @@ export async function runModelFeedbackExperiment(root:string,model:ModelProvider
  dataset.recordFeedback({id:crypto.randomUUID(),caseId:result.executionId,observedAt:Date.now(),source:'simulated-acceptance',value:'ACK-42'});
  const snapshot=dataset.snapshot();
  const evaluation=await agent.evaluate(result,task,snapshot.cases[0].feedback!.value);
- const report={executionId:result.executionId,status:result.status,output:result.output??null,environment,feedbackMode:'simulated',costMode:'unpriced; evaluator cost is a fixture value',modelEvents:source.trace.events.filter(e=>e.type==='model/request').length,evaluation,snapshot};
+ const report={executionId:result.executionId,status:result.status,output:result.output??null,environment,feedbackMode:'simulated',costMode:'unpriced; evaluator cost is a fixture value',modelEvents:source.trace.events.filter(e=>e.type==='model/request').length,evaluation,llmEvaluation:(evaluation as typeof evaluation & {llmEvaluation?:unknown}).llmEvaluation,snapshot};
  mkdirSync(root,{recursive:true});writeFileSync(join(root,'report.json'),JSON.stringify(report,null,2)+'\n');
  return report;
 }

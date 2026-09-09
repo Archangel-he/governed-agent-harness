@@ -6,6 +6,14 @@ export interface EvaluationRubric {id:string;version:string;dimensions:RubricDim
 export interface DimensionJudgement {dimensionId:string;score:number;claim:string;evidence:EvaluationEvidence[];confidence:number;uncertainty?:string}
 export interface StructuredLLMEvaluation {evaluatorId:string;evaluatorVersion:string;modelId:string;promptVersion:string;rubricDigest:string;traceDigest:string;status:'provisional'|'settled'|'needs-review';judgements:DimensionJudgement[];overall?:number;confidence:number;dispersion?:number;evidenceEventIds:string[]}
 export interface PairwiseJudgement {winner:'baseline'|'candidate'|'tie'|'uncertain';margin:'small'|'large';reasons:string[];regressions:string[];confidence:number;evidenceEventIds:string[]}
+export interface LLMEvaluationContext {input:unknown;output:unknown;trace:import('../trace/events.js').AgentTrace;expected?:unknown}
+export interface LLMEvaluator {rubric:EvaluationRubric;evaluatorId:string;evaluatorVersion:string;modelId:string;promptVersion:string;judge(context:LLMEvaluationContext):Promise<DimensionJudgement[]>}
+
+export function validateEvaluationEvidence(result:StructuredLLMEvaluation,trace:import('../trace/events.js').AgentTrace):void {
+ const ids=new Set(trace.events.map(event=>event.id));
+ if(result.traceDigest!==evidenceDigest(trace.events))throw new Error('LLM evaluation trace digest mismatch');
+ if(result.evidenceEventIds.some(id=>!ids.has(id))||result.judgements.some(j=>j.evidence.some(e=>e.eventIds.some(id=>!ids.has(id)))))throw new Error('LLM evaluation references unknown evidence');
+}
 
 export function aggregateLLMEvaluation(input:{rubric:EvaluationRubric;judgements:DimensionJudgement[];traceDigest:string;evaluatorId:string;evaluatorVersion:string;modelId:string;promptVersion:string;provisional?:boolean}):StructuredLLMEvaluation {
   const ids=new Set(input.rubric.dimensions.map(d=>d.id));

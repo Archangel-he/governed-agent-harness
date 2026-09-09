@@ -59,3 +59,7 @@ docker run --rm --network none governed-agent-harness:local
 `npm run verify` 退出码 0：86 项测试通过，0 失败、0 跳过；六步 Decision／Tool、模板归因实验、五 Agent 团队和兼容示例全部通过。
 
 应用 Docker 镜像构建退出码 0；以非 root 用户、`--network none --read-only` 和临时可写目录运行三组验收，退出码 0。原始输出保存在本地 `.tmp/verify-wiki-team.log` 与 `.tmp/docker-wiki-team.log`。源码复查确认本轮重要问题已修正；没有将确定性验收描述成真实模型业务质量认证。
+
+## 真实模型预验收记录（2026-09-09）
+
+已通过硅基流动 OpenAI-compatible Provider 启动 `npm run experiment:model-feedback`。实验目录被创建，说明本地模板装配和启动路径正常；当前网络请求超过 30 秒未返回，未生成 `report.json`，因此不宣称真实模型执行成功。API key 未写入仓库或实验报告。重试应先确认 Provider 可达性和模型响应，再运行同一命令。

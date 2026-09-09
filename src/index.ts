@@ -14,7 +14,8 @@ export {analyzeTrajectory, analyzeCapabilityTrajectory} from './governance/analy
 export {createPluginOptimizationProposal, proposalToCandidateChange, type PluginOptimizationProposal} from './governance/plugin-proposal.js';
 export {compareInterventions, type CrossEvaluation} from './governance/cross-evaluation.js';
 export {governanceReport} from './governance/report.js';
-export {aggregateLLMEvaluation, compareLLMEvaluations, type EvaluationRubric, type RubricDimension, type StructuredLLMEvaluation, type DimensionJudgement, type PairwiseJudgement, type EvaluationEvidence} from './governance/llm-evaluation.js';
+export {aggregateLLMEvaluation, compareLLMEvaluations, validateEvaluationEvidence, type EvaluationRubric, type RubricDimension, type StructuredLLMEvaluation, type DimensionJudgement, type PairwiseJudgement, type EvaluationEvidence, type LLMEvaluator, type LLMEvaluationContext} from './governance/llm-evaluation.js';
+export {createStructuredLLMEvaluator} from './governance/llm-judge.js';
 export type {MemoryPage, MemorySnapshot, MemoryProvider} from './contracts/memory.js';
 export {minimalAgentTemplate} from './templates/minimal-agent.js';
 export {toolAgentTemplate} from './templates/tool-agent.js';
