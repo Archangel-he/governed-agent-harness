@@ -1,0 +1,3 @@
+import {evidenceDigest} from './evaluation.js';import type {DynamicDatasetSnapshot} from './dynamic-evaluation.js';
+export interface OptimizationProposal {id:string;agentVersionId:string;hypothesis:string;evidenceEventIds:string[];affectedPlugins:string[];datasetDigest:string;successCriteria:string[];status:'proposed'|'accepted'|'rejected'}
+export function createOptimizationProposal(input:Omit<OptimizationProposal,'id'|'status'|'datasetDigest'> & {snapshot:DynamicDatasetSnapshot}):OptimizationProposal {if(!input.evidenceEventIds.length||!input.successCriteria.length)throw new Error('Optimization evidence and criteria required');return {...input,id:evidenceDigest(input),datasetDigest:input.snapshot.digest,status:'proposed'}}

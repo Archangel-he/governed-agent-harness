@@ -6,6 +6,9 @@ export {freezeEvaluation, type EvaluationCase, type EvaluationDataset, type Vers
 export {DynamicEvaluationStore, type DynamicCase, type DynamicDatasetSnapshot, type FeedbackEvent, type FeedbackStatus} from './governance/dynamic-evaluation.js';
 export {fileFeedbackSource, httpFeedbackSource, type FeedbackSource} from './governance/feedback-source.js';
 export {extractMemoryCandidates, extractMemoryCandidatesWithModel, detectMemoryConflicts, consolidateMemoryCandidates, proposeMemory, maintainMemory, maintainMemoryWithModel, type MemoryCandidate, type ModelMemoryCandidate, type ProposalOptions} from './memory/trajectory-proposals.js';
+export {inspectWiki, maintainWiki, retrieveMemory, type WikiHealth} from './memory/maintenance.js';
+export {FeedbackScheduler} from './governance/feedback-scheduler.js';
+export {createOptimizationProposal, type OptimizationProposal} from './governance/optimization-proposal.js';
 export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './providers/openai-compatible.js';
 export type {AgentVersion} from './contracts/index.js';
 export type {TopologyDefinition, TopologyNode, TopologyEdge} from './topology/schema.js';
