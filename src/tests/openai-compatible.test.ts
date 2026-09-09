@@ -12,3 +12,10 @@ test('OpenAI-compatible provider surfaces HTTP failures',async()=>{
  const old=globalThis.fetch;globalThis.fetch=async()=>new Response('bad',{status:429,statusText:'Too Many'});
  try {const model=createOpenAICompatibleModel({apiKey:'secret',model:'demo',endpoint:'https://example.test'});await assert.rejects(model.invoke({systemPrompt:'',history:[],tools:[]},new AbortController().signal),/429/)} finally {globalThis.fetch=old}
 });
+
+
+test('OpenAI-compatible stream preserves tool call deltas',async()=>{
+ const old=globalThis.fetch;
+ globalThis.fetch=async()=>new Response('data: '+JSON.stringify({choices:[{delta:{tool_calls:[{index:0,id:'c',function:{name:'echo',arguments:'{"x":1}'}}]}}]})+'\n\ndata: [DONE]\n\n',{status:200,headers:{'content-type':'text/event-stream'}});
+ try {const model=createOpenAICompatibleModel({apiKey:'secret',model:'demo',endpoint:'https://example.test'});const chunks=[];for await(const chunk of model.stream!({systemPrompt:'',history:[],tools:['echo']},new AbortController().signal))chunks.push(chunk);assert.deepEqual(chunks[0].toolCallDeltas,[{index:0,id:'c',name:'echo',arguments:'{"x":1}'}])} finally {globalThis.fetch=old}
+});

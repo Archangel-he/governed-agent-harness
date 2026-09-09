@@ -67,14 +67,14 @@ export class GovernedAgentRuntime {
       ...(this.options.kernel?{kernel:{model:providerIdentity(this.options.kernel.model),tools:Object.fromEntries(Object.entries(this.options.kernel.tools).map(([name,tool])=>[name,providerIdentity(tool)])),maxSteps:this.options.kernel.maxSteps??16,maxRetries:this.options.kernel.maxRetries??0,systemPromptDigest:evidenceDigest(this.options.systemPrompt??'Follow the task and return a result.')}}:{})});
     const memory=request.memory?freezeTopology(request.memory):undefined;
     if(memory&&(!memory.releaseId||!Array.isArray(memory.pages)||new Set(memory.pages.map(p=>p.pageId)).size!==memory.pages.length||memory.pages.some(p=>!p.pageId||typeof p.content!=='string'||!Number.isSafeInteger(p.revision)||p.revision<1)))throw new Error('Invalid memory snapshot');
-    const digest=evidenceDigest({version,input,environmentSnapshot,...(memory?{memory}:{})});
+    const digest=evidenceDigest({version,input,environmentSnapshot,...(memory?{memory}:{})});const identityDigest=evidenceDigest({version,input,environmentSnapshot,...(memory?{memory:{releaseId:memory.releaseId}}:{})});
     const release=this.sessions.acquire(sessionId);
     try {
       const history=this.sessions.events(sessionId);
       const prior=history.find(event=>event.type==='harness/request' && (event.payload as Record<string,unknown>).requestId===request.requestId);
       if (prior) {
-        const p=prior.payload as {executionId:string;digest:string};
-        if(p.digest!==digest) throw new Error('Request ID reused with different version/input');
+        const p=prior.payload as {executionId:string;digest:string;version:AgentVersion;input:unknown;environmentSnapshot:unknown;memory?:{releaseId:string}};
+        const previousIdentity=evidenceDigest({version:p.version,input:p.input,environmentSnapshot:p.environmentSnapshot,...(p.memory?{memory:{releaseId:p.memory.releaseId}}:{})});if(previousIdentity!==identityDigest) throw new Error('Request ID reused with different version/input');
         return this.restore(sessionId,p.executionId);
       }
       request.signal?.throwIfAborted();
@@ -267,3 +267,4 @@ export class GovernedAgentRuntime {
     return {executionId,status:payload?.status??'interrupted',...(payload?.output===undefined?{}:{output:payload.output}),...(payload?.error?{error:payload.error}:{}),trace};
   }
 }
+

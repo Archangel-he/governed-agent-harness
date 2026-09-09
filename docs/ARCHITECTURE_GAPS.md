@@ -51,6 +51,7 @@ The application image uses `node:24.18.0-bookworm-slim` and runs as user `node`.
 
 ## Current verification record (2026-09-09)
 
-`npm run verify` exits 0: 106 tests passed, 0 failed, 0 skipped. Template, team, integration, and other examples pass. The local log is `.tmp/final-goal-test.log`. This record does not prove business quality or long-term reliability, and this documentation pass does not rerun paid models or rebuild Docker.
+The latest focused validation passed TypeScript checks and 102 non-Docker tests. Four Docker tests remain environment-blocked because the Docker daemon was unavailable. The seven examples passed; the `acceptance` example requires `.tmp` to exist first. Docker image build, real-model business quality, and long-running stability were not verified in this run. This record does not claim business quality or long-term reliability.
 
 Historical 86-test and earlier real-model records are retained as historical evidence only.
+
