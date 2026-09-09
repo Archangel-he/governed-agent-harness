@@ -51,6 +51,7 @@ const report = await agent.evaluate(result, input);
 需要延迟反馈的 Agent 可使用 `DynamicEvaluationStore`：先记录决策，反馈到达后回填，再冻结 `snapshot()` 供基线和候选公平比较。它只定义通用时间与证据约束，不假设量化或其他业务领域。
 
 Wiki 记忆也支持自动维护：`maintainMemory(wiki, trace, options)` 会从轨迹中的显式 `knowledge/candidate` 事实提取候选、合并同主题冲突、生成带来源 Artifact 的 Proposal，并自动发布新的不可变 Release。冲突会保留为 `hypothesis`，旧 Release 始终保留，发布失败不会覆盖旧记忆。
+在 `AgentTemplate` 中设置 `memoryMaintenance: true`，每次成功执行收束后会自动让模型提取候选并维护 Agent Wiki；关闭时不会增加额外模型调用。
 
 复制 [text-agent.ts](src/templates/text-agent.ts)，填写 `AgentTemplate`：
 

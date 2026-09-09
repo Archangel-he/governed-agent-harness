@@ -10,6 +10,7 @@ import {WikiStore,type MemoryRelease} from './memory/wiki.js';
 import {evidenceDigest} from './governance/evaluation.js';
 import {freezeEvaluation,type VersionedEvaluation,type EvaluationCase} from './governance/evaluation-package.js';
 import {freezeTopology} from './topology/schema.js';
+import {maintainMemoryWithModel} from './memory/trajectory-proposals.js';
 
 export interface AgentTemplate {
  agentId:string;
@@ -17,6 +18,7 @@ export interface AgentTemplate {
  plugins:CapabilityPlugin[];
  evaluation:VersionedEvaluation;
  services?:Omit<GovernedRuntimeOptions,'root'|'plugins'>;
+ memoryMaintenance?:boolean;
 }
 export function memorySnapshot(releases:MemoryRelease[]):NonNullable<AgentRequest['memory']>{
  const pages=releases.flatMap(release=>Object.values(release.pages).map(page=>({pageId:`${release.scope}:${release.owner}/${page.pageId}`,revision:page.revision,content:`Status: ${page.status}\n${page.markdown}\nSources: ${page.sources.map(s=>s.hash).join(', ')}`})));
@@ -32,7 +34,7 @@ export function assembleAgent(root:string,definition:AgentTemplate){
  const runtime=new GovernedAgentRuntime({...definition.services,root:join(root,'runtime'),plugins});
  const versions=new LocalVersionStore(join(root,'versions')),wiki=new WikiStore(join(root,'memory'));
  const resolver=new RuntimeEvidenceSourceResolver(runtime.sessions,[agentId]);
- const run=(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>runtime.run({agentId,requestId,version:options.version??version,input,memory:options.memory??memorySnapshot([wiki.pinned('agent',agentId)]),...(options.signal?{signal:options.signal}:{})});
+ const run=async(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>{const result=await runtime.run({agentId,requestId,version:options.version??version,input,memory:options.memory??memorySnapshot([wiki.pinned('agent',agentId)]),...(options.signal?{signal:options.signal}:{})});if(definition.memoryMaintenance&&definition.services?.kernel?.model&&result.status==='completed')await maintainMemoryWithModel(wiki,result.trace,definition.services.kernel.model,{scope:'agent',owner:agentId,proposedBy:agentId});return result};
  const evaluate=async(result:Awaited<ReturnType<typeof run>>,input:unknown,expected?:unknown)=>evaluateTrace(result.trace,evaluation.gates,evaluation.evaluator.judge(input,result.output??null,expected));
  const compare=async(change:CandidateChange,cases:readonly EvaluationCase[]=evaluation.dataset.cases)=>{
   if(change.baselineVersionId===version.id && change.candidateVersionId!==version.id) {
