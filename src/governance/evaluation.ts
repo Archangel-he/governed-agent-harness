@@ -25,7 +25,7 @@ export interface Evaluation {
   traceDigest: string;
   profileDigest: string;
   evidenceEventIds: string[];
-  metrics: { completion: number; quality: number; safety: number; reliability: number; cost: number; latencyMs: number; retries: number; humanInterventions: number };
+  metrics: { completion: number; quality: number; safety: number; reliability: number; attemptReliability: number; cost: number; latencyMs: number; retries: number; humanInterventions: number };
   score: number;
   passed: boolean;
   failedGates: string[];
@@ -58,19 +58,33 @@ export function evaluateTrace(trace: AgentTrace, profile: EvaluationProfile, out
   const nodes=operations.filter(op=>op.nodeId!==undefined);
   const measured=nodes.length?nodes:operations;
   const attempted=measured.filter(op=>op.status!=='skipped');
-  const reliability=attempted.length?attempted.filter(op=>op.status==='succeeded').length/attempted.length:0;
+  // Only an explicit same-iteration retry supersedes its failed attempt.
+  const superseded=new Set<string>();
+  for(const op of operations){
+    const start=rebuilt.events.find(e=>e.id===op.startEventId)!;
+    const next=start.payload as {retryOfOperationId?:string;iteration?:number;attempt?:number}|undefined;
+    if(!next?.retryOfOperationId)continue;
+    const prior=rebuilt.operations.get(next.retryOfOperationId);
+    const terminal=rebuilt.events.find(e=>e.id===prior?.terminalEventId);
+    const previous=terminal?.payload as {iteration?:number;attempt?:number;retry?:boolean}|undefined;
+    if(prior?.status==='failed'&&prior.nodeId===op.nodeId&&prior.parentOperationId===op.parentOperationId&&previous?.retry===true&&Number.isInteger(next.attempt)&&next.attempt===(previous.attempt??0)+1&&next.iteration===previous.iteration&&op.dependencyOperationIds.includes(prior.operationId))superseded.add(prior.operationId);
+  }
+  const finals=attempted.filter(op=>!superseded.has(op.operationId));
+  const modelRetries=rebuilt.events.filter(e=>e.type==='model/retry').length;
+  const attemptReliability=attempted.length?attempted.filter(op=>op.status==='succeeded').length/(attempted.length+modelRetries):0;
+  const reliability=finals.length?finals.filter(op=>op.status==='succeeded').length/finals.length:0;
   const times=rebuilt.events.map(e=>e.timestamp).filter((n):n is number=>typeof n==='number');
   const retries=rebuilt.events.filter(e=>e.type==='model/retry'||e.type==='node/retry').length;
   const latencyMs=times.length?Math.max(...times)-Math.min(...times):0;
-  const metrics={completion:Number(outcome.completed),quality:outcome.quality,safety:Number(outcome.safe),reliability,cost:outcome.cost,latencyMs,retries,humanInterventions:outcome.humanInterventions};
+  const metrics={completion:Number(outcome.completed),quality:outcome.quality,safety:Number(outcome.safe),reliability,attemptReliability,cost:outcome.cost,latencyMs,retries,humanInterventions:outcome.humanInterventions};
   const gates:Record<string,boolean>={
     trace:rebuilt.complete, completion:outcome.completed,
-    terminal:operations.every(op=>['succeeded','skipped'].includes(op.status)),
+    terminal:rebuilt.unknownOperations.length===0 && operations.every(op=>superseded.has(op.operationId)||['succeeded','skipped'].includes(op.status)),
     quality:outcome.quality>=profile.minQuality,safety:outcome.safe,
     reliability:reliability>=profile.minReliability,cost:outcome.cost<=profile.maxCost,
     latency:latencyMs<=profile.maxLatencyMs,retries:retries<=profile.maxRetries,
     humanInterventions:outcome.humanInterventions<=profile.maxHumanInterventions
   };
   const failedGates=Object.keys(gates).filter(key=>!gates[key]);
-  return {executionId:trace.executionId,traceDigest:evidenceDigest(rebuilt.events),profileDigest:evidenceDigest(profile),evidenceEventIds:rebuilt.events.map(e=>e.id),metrics,score:.8*outcome.quality+.2*reliability,passed:failedGates.length===0,failedGates};
+  return {executionId:trace.executionId,traceDigest:evidenceDigest(rebuilt.events),profileDigest:evidenceDigest(profile),evidenceEventIds:rebuilt.events.map(e=>e.id),metrics,score:.8*outcome.quality+.15*reliability+.05*attemptReliability,passed:failedGates.length===0,failedGates};
 }

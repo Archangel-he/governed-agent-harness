@@ -3,9 +3,11 @@ import { join } from 'node:path';
 import { GovernedAgentRuntime } from '../runtime/governed-runtime.js';
 import { acceptancePlugins, acceptanceKernel, decisionVersion, toolVersion } from './acceptance-agents.js';
 import { evaluateTrace, defaultProfile } from '../governance/evaluation.js';
-import { runExperiment, promoteCandidate } from '../governance/experiment.js';
+import { runExperiment, promoteCandidate, type ExperimentEvaluator } from '../governance/experiment.js';
 import { LocalVersionStore } from '../services/version-store.js';
 import type { AgentVersion } from '../contracts/domain.js';
+
+import { RuntimeEvidenceSourceResolver } from '../runtime/evidence-source.js';
 
 const root=mkdtempSync('.tmp/acceptance-');
 const runtime=new GovernedAgentRuntime({root,plugins:acceptancePlugins(),kernel:acceptanceKernel()});
@@ -25,11 +27,13 @@ const baseline={...decisionVersion,topology:decisionVersion.topology!};
 const candidate={...baseline,id:'decision-v2',topology:{...baseline.topology,version:'2'}};
 versions.publish(baseline);versions.publish(candidate);versions.activate(baseline.id);
 const source=runtime.sessions.events('agent:decision').filter(e=>e.type==='harness/trace');
-const report=await runExperiment(versions,{id:'acceptance-change',baselineVersionId:baseline.id,candidateVersionId:candidate.id,hypothesis:'Equivalent candidate must preserve complete Agent quality',evidenceEventIds:source.map(e=>e.id)},[{id:'safe-choice',input:cases[0].input}],defaultProfile,
+const resolver=new RuntimeEvidenceSourceResolver(runtime.sessions,['decision','experiment']);
+const evaluator:ExperimentEvaluator={id:'safe-choice',version:'1',judge:(_input,output)=>({completed:true,quality:(output as {valid?:boolean})?.valid?1:0,safe:(output as {decision?:{id:string}})?.decision?.id==='safe',cost:0,humanInterventions:0})};
+const report=await runExperiment(versions,{id:'acceptance-change',baselineVersionId:baseline.id,candidateVersionId:candidate.id,hypothesis:'Equivalent candidate must preserve complete Agent quality',evidenceEventIds:source.map(e=>e.id),sourceExecutionIds:[(source[0].payload as {executionId:string}).executionId]},[{id:'safe-choice',input:cases[0].input}],defaultProfile,
  async(version,input)=>runtime.run({agentId:'experiment',requestId:crypto.randomUUID(),version:version as unknown as AgentVersion,input}),
- (_input,output)=>({completed:true,quality:(output as {valid?:boolean})?.valid?1:0,safe:(output as {decision?:{id:string}})?.decision?.id==='safe',cost:0,humanInterventions:0}));
+ evaluator,resolver);
 const evidence=await runtime.artifacts.put(Buffer.from(JSON.stringify(report)),'application/json');
-const receipt=promoteCandidate(versions,report,true);
+const receipt=await promoteCandidate(versions,report,true,resolver,evaluator);
 versions.rollback(receipt.rollbackVersionId);
 if(versions.active().id!==baseline.id)throw new Error('Rollback failed');
 writeFileSync(join(root,'experiment.json'),JSON.stringify({report,evidence,receipt,active:versions.active().id},null,2));

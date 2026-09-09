@@ -23,6 +23,7 @@ export interface CapabilityContext {
   readonly signal?: AbortSignal;
   readonly config?: Readonly<Record<string, unknown>>;
   readonly seatId?: string;
+  readonly memory?: Readonly<{releaseId:string;pages:readonly {pageId:string;content:string;revision:number}[]}>;
   readonly emit: (event: PluginEvent) => void;
 }
 

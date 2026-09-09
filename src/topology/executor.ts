@@ -1,4 +1,4 @@
-﻿import { compileTopology } from './compiler.js';
+import { compileTopology } from './compiler.js';
 import { freezeTopology, type TopologyDefinition, type TopologyNode } from './schema.js';
 import { checkValue } from './value-schema.js';
 import { jsonSnapshot } from '../services/log-value.js';
@@ -9,6 +9,7 @@ interface ExecutorOptions {
   plugins:Map<string,CapabilityPlugin>;
   emit:(event:Record<string,unknown>)=>void;
   signal?:AbortSignal;
+  memory?:Readonly<{releaseId:string;pages:readonly {pageId:string;content:string;revision:number}[]}>;
 }
 export class TopologyExecutor {
   constructor(private readonly options:ExecutorOptions) {}
@@ -55,20 +56,22 @@ export class TopologyExecutor {
       const plugin=plugins.get(nodeId)!;
       const dependencies=active.map(e=>lastOperations.get(e.from)).filter((id):id is string=>!!id);
       let iteration=0;
+      const attemptDependencies=[...dependencies];
       while(true) {
         const attempts=node.failurePolicy?.mode==='retry'?node.failurePolicy.maxAttempts!:1;
         let result:PluginResult|undefined;
+        let retryOfOperationId:string|undefined;
         for(let attempt=1;attempt<=attempts;attempt++) {
           controller.signal.throwIfAborted();
           checkValue(arg,node.inputSchema,'input:'+nodeId);
           const operationId=`${this.options.executionId}:${nodeId}:${++sequence}`;
           let operationOpen=true;
-          const metadata={operationId,nodeId,seatId:node.seatId??nodeId,pluginId:plugin.manifest.id,pluginVersion:plugin.manifest.version,iteration,attempt};
-          emit({type:'node/start',status:'started',...metadata,input:arg,dependencyOperationIds:[...dependencies]});
+          const metadata={operationId,nodeId,seatId:node.seatId??nodeId,pluginId:plugin.manifest.id,pluginVersion:plugin.manifest.version,iteration,attempt,...(retryOfOperationId?{retryOfOperationId}:{})};
+          emit({type:'node/start',status:'started',...metadata,input:arg,dependencyOperationIds:[...attemptDependencies]});
           try {
             result=jsonSnapshot(await plugin.invoke(jsonSnapshot(arg),Object.freeze({
-              executionId:this.options.executionId,agentId:this.options.agentId,agentVersionId:this.options.agentVersionId,nodeId,seatId:node.seatId??nodeId,operationId,signal:controller.signal,config:freezeTopology(node.config??{}),
-              emit:(event:{type:string;payload?:unknown})=>{if(!operationOpen){const late=`${operationId}:late:${++sequence}`;emit({type:'plugin/late',operationId:late,nodeId,status:'unknown',phase:'fact',parentOperationId:operationId,payload:{event:jsonSnapshot(event)}});return}emit({type:event.type,...metadata,status:'started',phase:'fact',...(event.payload===undefined?{}:{payload:jsonSnapshot(event.payload)})})}
+              executionId:this.options.executionId,agentId:this.options.agentId,agentVersionId:this.options.agentVersionId,nodeId,seatId:node.seatId??nodeId,operationId,signal:controller.signal,config:freezeTopology(node.config??{}),memory:this.options.memory,
+              emit:(event:{type:string;payload?:unknown})=>{if(/^(node|execution|model|tool|turn|step|lifecycle|harness|operation|memory)\//.test(event.type))throw new Error('Reserved trace event namespace');if(!operationOpen){const late=`${operationId}:late:${++sequence}`;emit({type:'plugin/late',operationId:late,nodeId,status:'unknown',phase:'fact',parentOperationId:operationId,payload:{event:jsonSnapshot(event)}});return}emit({type:event.type,...metadata,status:'started',phase:'fact',...(event.payload===undefined?{}:{payload:jsonSnapshot(event.payload)})})}
             })));
             controller.signal.throwIfAborted();
             checkValue(result.output??null,node.outputSchema,'output:'+nodeId);
@@ -85,20 +88,21 @@ export class TopologyExecutor {
             break;
           } catch(error) {
             if(persistenceFailed)throw error;
-            const unknown=controller.signal.aborted&&(plugin.manifest.sideEffects?.length??0)>0;
+            const unknown=(plugin.manifest.sideEffects?.length??0)>0&&(controller.signal.aborted||!plugin.manifest.idempotent);
             const status=unknown?'unknown':controller.signal.aborted?'cancelled':'failed';
             const retry=!controller.signal.aborted&&attempt<attempts;
             if(retry)emit({type:'node/retry',...metadata,status:'started',phase:'fact',error:String(error)});
             operationOpen=false;
             emit({type:'node/end',status,...metadata,error:String(error),retry});
             lastOperations.set(nodeId,operationId);
+            attemptDependencies.push(operationId);retryOfOperationId=operationId;
             if(retry)continue;
             if(node.failurePolicy?.mode==='continue'&&!unknown&&!controller.signal.aborted){result={output:{error:String(error)}};break}
             controller.abort(error);throw error;
           }
         }
         results.set(nodeId,result!);
-        if(result!.control?.type==='loop'){arg=result!.output??null;iteration++;continue}
+        if(result!.control?.type==='loop'){arg=result!.output??null;attemptDependencies.splice(0,attemptDependencies.length,lastOperations.get(nodeId)!);iteration++;continue}
         if(result!.control?.type==='stop'){stop=true;stopOutput=result!.output??null}
         return;
       }
