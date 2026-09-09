@@ -24,6 +24,7 @@ export interface AgentTemplate {
  memoryMode?:'stateless'|'persistent';
  memoryProvider?:MemoryProvider;
 }
+export type AgentHandle=ReturnType<typeof assembleAgent>;
 export function memorySnapshot(releases:MemoryRelease[]):NonNullable<AgentRequest['memory']>{
  const pages=releases.flatMap(release=>Object.values(release.pages).map(page=>({pageId:`${release.scope}:${release.owner}/${page.pageId}`,revision:page.revision,content:`Status: ${page.status}\n${page.markdown}\nSources: ${page.sources.map(s=>s.hash).join(', ')}`})));
  return freezeTopology({releaseId:evidenceDigest(releases.map(r=>({scope:r.scope,owner:r.owner,id:r.id}))),pages});

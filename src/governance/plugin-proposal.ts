@@ -1,3 +1,5 @@
 import {evidenceDigest} from './evaluation.js';
+import type {CandidateChange} from './experiment.js';
 export interface PluginOptimizationProposal {id:string;pluginId:string;baselineVersion:string;candidateVersion?:string;affectedDownstream:string[];evidenceEventIds:string[];hypothesis:string;successCriteria:string[];status:'proposed'|'accepted'|'rejected'}
 export function createPluginOptimizationProposal(input:Omit<PluginOptimizationProposal,'id'|'status'>):PluginOptimizationProposal {if(!input.pluginId||!input.evidenceEventIds.length||!input.successCriteria.length)throw new Error('Plugin proposal requires identity, evidence and criteria');return{...input,id:evidenceDigest(input),status:'proposed'}}
+export function proposalToCandidateChange(proposal:PluginOptimizationProposal,baselineVersionId:string,candidateVersionId:string,sourceExecutionIds:string[]):CandidateChange {if(proposal.status!=='proposed')throw new Error('Only proposed plugin changes can enter an experiment');return{id:proposal.id,baselineVersionId,candidateVersionId,hypothesis:proposal.hypothesis,evidenceEventIds:[...proposal.evidenceEventIds],sourceExecutionIds}}

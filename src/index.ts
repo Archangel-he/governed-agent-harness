@@ -1,5 +1,5 @@
 /** Public composition surface: define a template, assemble it, then run it. */
-export {assembleAgent, memorySnapshot, type AgentTemplate} from './agent.js';
+export {assembleAgent, memorySnapshot} from './agent.js';
 export {definePlugin, type CapabilityPlugin} from './plugins/capability.js';
 export {evaluateTrace, defaultProfile, type Evaluation, type EvaluationProfile, type TaskOutcome} from './governance/evaluation.js';
 export {freezeEvaluation, type EvaluationCase, type EvaluationDataset, type VersionedEvaluation} from './governance/evaluation-package.js';
@@ -11,12 +11,15 @@ export {FeedbackScheduler} from './governance/feedback-scheduler.js';
 export {createOptimizationProposal, type OptimizationProposal} from './governance/optimization-proposal.js';
 export {EpisodicMemoryStore, ObservationMemory, ProgressiveMemoryRetriever, type Episode, type Observation, type MemoryAction} from './memory/episodic.js';
 export {analyzeTrajectory, analyzeCapabilityTrajectory} from './governance/analyzer.js';
-export {createPluginOptimizationProposal, type PluginOptimizationProposal} from './governance/plugin-proposal.js';
+export {createPluginOptimizationProposal, proposalToCandidateChange, type PluginOptimizationProposal} from './governance/plugin-proposal.js';
 export {compareInterventions, type CrossEvaluation} from './governance/cross-evaluation.js';
 export {governanceReport} from './governance/report.js';
 export type {MemoryPage, MemorySnapshot, MemoryProvider} from './contracts/memory.js';
 export {minimalAgentTemplate} from './templates/minimal-agent.js';
 export {toolAgentTemplate} from './templates/tool-agent.js';
+export type {AgentTemplate, AgentHandle} from './agent.js';
+export type {AgentRequest, AgentRunResult, GovernedRuntimeOptions} from './runtime/governed-runtime.js';
 export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './providers/openai-compatible.js';
 export type {AgentVersion} from './contracts/index.js';
 export type {TopologyDefinition, TopologyNode, TopologyEdge} from './topology/schema.js';
+
