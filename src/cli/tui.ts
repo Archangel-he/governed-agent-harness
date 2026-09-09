@@ -47,7 +47,8 @@ export async function startTui(root = mkdtempSync(join(tmpdir(), 'agent-tui-')))
     if (!parsed.name) continue;
     if (!group && commandGroups[parsed.name]) { group = parsed.name; console.log(`${group}: ${commandGroups[group].join('  ')}`); continue; }
     const key = group ? `${group} ${parsed.name}` : (parsed.args.length ? `${parsed.name} ${parsed.args[0]}` : parsed.name);
-    const args = group ? parsed.args : (parsed.args.length ? parsed.args.slice(1) : parsed.args);`r`n    if (parsed.name === 'back' && group) { group = ''; continue; }
+    const args = group ? parsed.args : (parsed.args.length ? parsed.args.slice(1) : parsed.args);
+    if (parsed.name === 'back' && group) { group = ''; continue; }
     const handler = commands[key];
     if (!handler) { console.log(`Unknown command: /${key}. Use /system help or /back`); continue; }
     await handler(args);
@@ -55,6 +56,7 @@ export async function startTui(root = mkdtempSync(join(tmpdir(), 'agent-tui-')))
   }
 }
 if (process.argv[1]?.endsWith('tui.ts')) await startTui();
+
 
 
 
