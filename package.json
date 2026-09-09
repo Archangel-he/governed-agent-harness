@@ -4,6 +4,7 @@
   "type": "module",
   "types": "src/index.ts",
   "scripts": {
+    "experiment:model-feedback": "tsx src/examples/model-feedback.ts",
     "check": "tsc --noEmit",
     "demo": "tsx src/examples/demo.ts",
     "skeleton": "tsx src/examples/skeleton-check.ts",

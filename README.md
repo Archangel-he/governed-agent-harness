@@ -25,6 +25,17 @@ docker run --rm --network none governed-agent-harness:local
 
 应用镜像固定 Node 版本，以非 root 用户执行三组验收。示例数据在容器 `/app/.tmp`；需要保留时挂载该目录。应用验收不需要挂载 Docker socket，也不自动调用付费模型。
 
+## 真实模型与延迟反馈实验
+
+设置进程环境变量 `SILICONFLOW_API_KEY` 后运行 `npm run experiment:model-feedback`。
+可通过 `SILICONFLOW_MODEL` 选择模型，默认 `deepseek-ai/DeepSeek-V3.1`。
+该命令会产生一次真实 API 调用（45 秒超时、无自动重试），使用完整 AgentTemplate 和持久化 Session，
+随后登记决策、回填明确标记为 `simulated-acceptance` 的模拟反馈，并调用 `agent.evaluate(result, input, feedback)`。
+报告和冻结快照写入输出目录的 `report.json`，原始轨迹位于同目录 `runtime/session.jsonl`。
+这是链路实验：反馈不是现实业务反馈，费用尚未计价，不能据此证明收益或长期可靠性。
+此命令不加入默认测试；默认测试通过无网络模型验证相同流程。动态数据集仍为内存实现，
+本示例保存快照供审计，尚不提供持续反馈监听和重启后自动回填。
+
 ## 定义自己的 Agent
 
 公共组合入口位于 `src/index.ts`。新 Agent 只需实现 `AgentTemplate`，不需要修改运行时：

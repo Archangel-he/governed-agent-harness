@@ -2,6 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DynamicEvaluationStore} from '../governance/dynamic-evaluation.js';
 
+test('decision, feedback and snapshot are isolated from nested caller mutations',()=>{
+ const store=new DynamicEvaluationStore('immutable');
+ const input={text:'original'},value={accepted:true};
+ store.recordDecision({id:'d',input,output:'answer',decisionAt:1});
+ input.text='changed';
+ store.recordFeedback({id:'f',caseId:'d',observedAt:2,value,source:'fixture'});
+ value.accepted=false;
+ const snapshot=store.snapshot(3);
+ assert.deepEqual(snapshot.cases[0].input,{text:'original'});
+ assert.deepEqual(snapshot.cases[0].feedback?.value,{accepted:true});
+ assert.throws(()=>{(snapshot.cases[0].input as {text:string}).text='tampered'},TypeError);
+ assert.equal(store.snapshot(3).digest,snapshot.digest);
+});
+
 test('dynamic evaluation records delayed feedback and freezes a reproducible snapshot',()=>{
  const store=new DynamicEvaluationStore('live','1');
  store.recordDecision({id:'d1',input:{x:1},output:{prediction:2},decisionAt:100});

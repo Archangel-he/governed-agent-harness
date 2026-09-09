@@ -33,7 +33,7 @@ export function assembleAgent(root:string,definition:AgentTemplate){
  const versions=new LocalVersionStore(join(root,'versions')),wiki=new WikiStore(join(root,'memory'));
  const resolver=new RuntimeEvidenceSourceResolver(runtime.sessions,[agentId]);
  const run=(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>runtime.run({agentId,requestId,version:options.version??version,input,memory:options.memory??memorySnapshot([wiki.pinned('agent',agentId)]),...(options.signal?{signal:options.signal}:{})});
- const evaluate=async(result:Awaited<ReturnType<typeof run>>,input:unknown)=>evaluateTrace(result.trace,evaluation.gates,evaluation.evaluator.judge(input,result.output??null));
+ const evaluate=async(result:Awaited<ReturnType<typeof run>>,input:unknown,expected?:unknown)=>evaluateTrace(result.trace,evaluation.gates,evaluation.evaluator.judge(input,result.output??null,expected));
  const compare=async(change:CandidateChange,cases:readonly EvaluationCase[]=evaluation.dataset.cases)=>{
   if(change.baselineVersionId===version.id && change.candidateVersionId!==version.id) {
    const candidateDigest=(change as CandidateChange & {candidateEvaluationDigest?:string}).candidateEvaluationDigest;
