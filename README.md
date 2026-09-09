@@ -27,6 +27,16 @@ docker run --rm --network none governed-agent-harness:local
 
 ## 定义自己的 Agent
 
+公共组合入口位于 `src/index.ts`。新 Agent 只需实现 `AgentTemplate`，不需要修改运行时：
+
+```ts
+import {assembleAgent, definePlugin, type AgentTemplate} from './src/index.js';
+const definition: AgentTemplate = {/* version, plugins, topology, evaluation */};
+const agent = assembleAgent('./data/my-agent', definition);
+const result = await agent.run('request-1', input);
+const report = await agent.evaluate(result, input);
+```
+
 复制 [text-agent.ts](src/templates/text-agent.ts)，填写 `AgentTemplate`：
 
 ```ts
