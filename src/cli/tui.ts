@@ -32,7 +32,7 @@ export async function startTui(root = mkdtempSync(join(tmpdir(), 'agent-tui-')))
     const line = '─'.repeat(width);
     stdout.write(`${color('1;36', ' Supreme Agent')}  ${definition.agentId}  ${agent.version.id}  ${definition.memoryMode ?? 'stateless'}  ${last ? color('32', last.status) : color('90', 'idle')}\n${line}\n`);
     stdout.write(outputLines.slice(-Math.max(5, (stdout.rows || 24) - 9)).join('\n') + '\n');
-    stdout.write(`${line}\n${palette ? renderPalette() : `${color('36', '›')} ${input}`}\n${line}\n${color('90', 'Enter run  / commands  ↑↓ select  Esc close  Ctrl+C quit')}`);
+    stdout.write(`${line}\n${palette ? renderPalette() : `${color('36', '>')} ${input}`}\n${line}\n${color('90', 'Enter run  / commands  ↑↓ select  Esc close  Ctrl+C quit')}`);
   };
   const renderPalette = () => {
     if (!group) return `${color('1;33', 'COMMANDS')}  ${groups.map((name, index) => index === selected ? color('7', ` ${name} `) : ` ${name} `).join(' ')}`;
@@ -78,4 +78,5 @@ export async function startTui(root = mkdtempSync(join(tmpdir(), 'agent-tui-')))
   });
 }
 if (process.argv[1]?.endsWith('tui.ts')) await startTui();
+
 
