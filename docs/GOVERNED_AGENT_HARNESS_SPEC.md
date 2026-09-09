@@ -1,4 +1,4 @@
-# Governed Agent Harness
+﻿# Governed Agent Harness
 ## 可治理智能体运行与演进框架 · 产品与架构规范
 
 版本：0.4（2026-09-09）
@@ -182,10 +182,11 @@ Supreme → Team Leader → Member 都是完整的 `GovernedAgentRuntime + Agent
 
 ## 12. 当前实现与最终定义
 
-截至 2026-09-09，本节之外的规范性要求应与实际实现区分：当前综合分析以运行统计和特定上下游归因规则为主，提案内容由调用方提供，尚无通用自动优化专家；动态评估已有可选 JSONL 保存，但反馈调度 checkpoint 未持久化。产品入口仍为 SDK 和示例脚本，TUI 已移除。最新验证结果统一记录在 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)，历史验收不代表持续运行保证。
+截至 2026-09-09，本节之外的规范性要求应与实际实现区分：当前综合分析以运行统计和特定上下游归因规则为主，提案内容由调用方提供，尚无通用自动优化专家；动态评估已有可选 JSONL 保存，但反馈调度 checkpoint 未持久化。产品入口仍为 SDK 和示例脚本。最新验证结果统一记录在 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)，历史验收不代表持续运行保证。
 
 本版已经以统一入口连接模板、Cordis 能力拓扑、Kernel、Session／Trace、Wiki、候选治理和三级团队。详细代码入口见 [CODE_MAP.md](CODE_MAP.md)，实际验收与保留边界见 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)。
 
 通用基座不会预装所有业务能力，也不会凭一组确定性示例声称真实模型在实际任务上的质量已经合格。具体 Agent 的 Provider、领域评估器和数据集由定义者提供，仍须跑同样的治理门禁。
 
 Governed Agent Harness 是单机实验用的 Agent 运行与演进框架：冻结执行组成，由人定义并细化能力拓扑，在 Cordis 上运行插件，结合全 Agent 轨迹提出优化假设，再以整体效果验证驱动版本演进；多 Agent 是这一基座的受治理层级组合。
+

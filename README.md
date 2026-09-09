@@ -1,4 +1,4 @@
-# Governed Agent Harness
+﻿# Governed Agent Harness
 
 供少量开发者在单机 Docker 中运行实验的 Agent 基座。开发者定义能力插件、拓扑和评估器，框架负责 Cordis 装配、执行记录、Wiki 记忆、整 Agent 评估和候选发布。插件分为承载 Agent 行为的 `capability` 与提供运行基础的 `infrastructure`；轨迹优化默认只针对前者。
 
@@ -80,10 +80,11 @@ const evaluation = await agent.evaluate(result, task);
 
 ## 阅读入口
 
-当前使用入口为 TypeScript SDK 和上述示例脚本，TUI 已移除。LLM 评价可通过版本化 `llmRubric`、`aggregateLLMEvaluation` 和 `compareLLMEvaluations` 接入；结果必须绑定证据事件，并在低置信度或高分歧时进入 `needs-review`，不能单独越过确定性门禁。验证范围与记录见 [实现边界与验收](docs/ARCHITECTURE_GAPS.md)。
+当前使用入口为 TypeScript SDK 和上述示例脚本。LLM 评价可通过版本化 `llmRubric`、`aggregateLLMEvaluation` 和 `compareLLMEvaluations` 接入；结果必须绑定证据事件，并在低置信度或高分歧时进入 `needs-review`，不能单独越过确定性门禁。验证范围与记录见 [实现边界与验收](docs/ARCHITECTURE_GAPS.md)。
 
 - [代码导航](docs/CODE_MAP.md)：当前真实调用路径。
 - [产品与架构规范](docs/GOVERNED_AGENT_HARNESS_SPEC.md)：设计原则与本轮增量。
 - [实现边界与验收](docs/ARCHITECTURE_GAPS.md)：实验范围、信任边界及验证命令。
 
 技术参考仅为 DeepSeek Harness／Cordis。DSH 参考 checkout 本轮更新至 `5dda764ed3aa172535a7967b06ff95d9cbfe536a`；采用其生命周期、持久消息、回执和任务权限语义，未引入整个 DSH monorepo。
+
