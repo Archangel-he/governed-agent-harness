@@ -37,6 +37,8 @@ const result = await agent.run('request-1', input);
 const report = await agent.evaluate(result, input);
 ```
 
+需要延迟反馈的 Agent 可使用 `DynamicEvaluationStore`：先记录决策，反馈到达后回填，再冻结 `snapshot()` 供基线和候选公平比较。它只定义通用时间与证据约束，不假设量化或其他业务领域。
+
 复制 [text-agent.ts](src/templates/text-agent.ts)，填写 `AgentTemplate`：
 
 ```ts
