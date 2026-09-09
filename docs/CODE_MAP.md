@@ -21,10 +21,15 @@
 | `runtime/evidence-source.ts` | 从指定 Agent Session 重建来源，校验请求摘要与轨迹终态摘要 |
 | `runtime/agent-loop.ts` | 流式模型、工具流水线、retry waterfall、取消和 Session 重建 |
 | `trace` | 严格 operation 状态机，统一 Session 投影 |
-| `governance/evaluation.ts` | 全 Agent 门禁；尝试失败、最终失败和未知副作用分别计量  |`n| `governance/evaluation-package.ts` | Evaluator、Dataset、Gates 的版本化契约和 digest |
+| `governance/evaluation.ts` | 全 Agent 门禁；尝试失败、最终失败和未知副作用分别计量 |
+| `governance/evaluation-package.ts` | Evaluator、Dataset、Gates 的版本化契约和 digest |
 | `governance/attribution.ts` | 依赖＋实际输入输出形成假设，单节点对照干预验证 |
 | `governance/experiment.ts` | 来源事件核验、成对实验、评估器锁定、发布前重验与 CAS |
 | `memory/wiki.ts` | 不可变来源、提案、CAS 发布、版本页面、索引、链接检查 |
+| `memory/episodic.ts` | 执行经历持久化、观察记忆和渐进式检索 |
+| `memory/trajectory-proposals.ts` | 轨迹候选、模型提取、冲突合并和自动 Wiki 维护 |
+| `memory/maintenance.ts` | Wiki 健康检查和预算限制检索 |
+| `governance/feedback-scheduler.ts` | 外部反馈拉取与动态评价回填 |
 | `team/hierarchy.ts` | Supreme／Leader／Member，任务队列、报告、回执、验收、冷恢复和范围记忆 |
 | `services` | Session、Artifact、Version、Registry、工作区与本机原子文件／锁 |
 | `sandbox/adapter.ts` | Docker 隔离执行；本轮沿用现有实现 |
@@ -34,7 +39,7 @@
 
 `harness/request` 固定版本／输入／环境／记忆 → `harness/trace` 写入所有操作事实 → `harness/seal` 保存终态轨迹摘要 → `RuntimeEvidenceSourceResolver` 读取并验证 → Experiment 固定来源和每个试验 → 发布时重新解析来源、重算评估器结果和门禁 → 不可变 release evidence → active 指针 CAS。
 
-Wiki 的 `wiki.json` 是原子提交的权威索引；`releases/<id>/pages/*.md`、`index.md`、`log.md` 是可查看的发布投影。执行记录固定 release 和完整页内容摘要，试验两边不允许记忆漂移。
+Wiki 的 `wiki.json` 是原子提交的权威索引；`releases/<id>/pages/*.md`、`index.md`、`log.md` 是可查看的发布投影。执行记录固定 release 和完整页内容摘要，试验两边不允许记忆漂移。Episodic Memory 保存在 Agent 根目录的 `memory/episodes.jsonl`，只记录经历，不替代 Wiki。
 
 ## 保留的低层示例
 
