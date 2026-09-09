@@ -1,4 +1,4 @@
-﻿import {createInterface} from 'node:readline/promises';
+import {createInterface} from 'node:readline/promises';
 import {stdin as input, stdout as output} from 'node:process';
 import {mkdtempSync} from 'node:fs';
 import {join} from 'node:path';
@@ -46,8 +46,8 @@ export async function startTui(root = mkdtempSync(join(tmpdir(), 'agent-tui-')))
     const parsed = parseCommand(await rl.question(group ? `${group} › ` : '› '));
     if (!parsed.name) continue;
     if (!group && commandGroups[parsed.name]) { group = parsed.name; console.log(`${group}: ${commandGroups[group].join('  ')}`); continue; }
-    const key = group ? `${group} ${parsed.name}` : parsed.name;
-    if (parsed.name === 'back' && group) { group = ''; continue; }
+    const key = group ? `${group} ${parsed.name}` : (parsed.args.length ? `${parsed.name} ${parsed.args[0]}` : parsed.name);
+    const args = group ? parsed.args : (parsed.args.length ? parsed.args.slice(1) : parsed.args);`n    if (parsed.name === 'back' && group) { group = ''; continue; }
     const handler = commands[key];
     if (!handler) { console.log(`Unknown command: /${key}. Use /system help or /back`); continue; }
     await handler(args);
