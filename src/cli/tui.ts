@@ -1,4 +1,4 @@
-﻿import {createInterface} from 'node:readline/promises';
+import {createInterface} from 'node:readline/promises';
 import {stdin as input, stdout as output} from 'node:process';
 import {mkdtempSync} from 'node:fs';
 import {join} from 'node:path';
