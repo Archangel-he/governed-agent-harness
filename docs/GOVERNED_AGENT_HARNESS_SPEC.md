@@ -1,192 +1,100 @@
-﻿# Governed Agent Harness
-## 可治理智能体运行与演进框架 · 产品与架构规范
+# Governed Agent Harness
+## Product and Architecture Specification
 
-版本：0.4（2026-09-09）
-状态：产品定位与核心原则定稿；工程实现持续建设。  
-文档中的“必须”是目标契约，不代表当前代码已经实现或通过生产验收。
+Version: 0.4 (2026-09-09)\nStatus: product positioning and core principles approved; implementation continues.\n“Must” describes the target contract, not a claim of production certification.
 
-## 1. 产品定位
+## 1. Product positioning
 
-本版面向少量开发者的单机 Docker 实验，提供从 Agent 定义、自由拓扑组装、执行运行、轨迹采集、综合评估到候选验证和版本发布的完整框架。
+This release is a complete local framework for a small developer group running Docker experiments: define an Agent, assemble a free topology, execute it, collect traces, evaluate the whole Agent, validate candidates, and publish versions.
 
-最终交付物是可直接构建和运行具体 Agent 的框架产品。开发者只需定义任务相关能力、配置能力插件及评价标准，不应重新实现模型循环、Session、权限执行、持久化、故障恢复和治理流水线。示例与模板是开发入口，不是产品的最终完成标准。
+The deliverable is a framework that can build and run concrete Agents. Developers define task-specific capabilities, plugin bindings, and evaluation criteria; they should not reimplement model loops, Sessions, permissions, persistence, recovery, or governance. DSH and Cordis are the sole technical references. The project name is Governed Agent Harness.
 
-技术实现以 DSH/Cordis 为唯一参考基础，已有机制优先复用并明确依赖版本和适配边界。
+## 2. Core additions beyond DSH
 
-工作名称采用 Governed Agent Harness，强调 Agent 的可靠运行与受治理演进；仓库目录和 npm 包名暂不迁移。
+DSH/Cordis provide plugin composition, lifecycle, Agent execution, and event mechanisms. This project adds four product contracts:
 
-## 2. 相对 DSH 的核心设计增量
+1. **Free capability topology:** the author chooses plugin count, composition, dependencies, order, parallelism, branches, and governance groups.
+2. **Complete Agent Trace:** evidence covers every participating plugin in one Agent execution instead of isolated plugin counters.
+3. **Whole-Agent evaluation:** overall effect is evaluated from complete executions and samples; local metrics are diagnostics.
+4. **Governed evolution:** an optimization becomes a candidate, then passes experiments, whole-Agent evaluation, and release gates.
 
-DSH/Cordis 是插件组合、生命周期、Agent 执行与事件机制的技术基础。本项目在此基础上明确增加四项产品契约：
+These are design goals, not a claim of absolute novelty.
 
-1. **自由能力拓扑**：由人定义 Agent，可自由决定能力插件的数量、组合、依赖、顺序、并行、条件分支和治理分组；框架以契约、静态检查、运行时边界和发布门禁保证自由拓扑可运行。
-2. **完整 Agent Trace**：关联一个 Agent 全部参与插件的运行证据，而非只保留各插件的独立统计。
-3. **Agent 级综合评估**：从完整执行与多次执行样本评估整体效果，局部指标用于诊断。
-4. **受治理的插件与拓扑演进**：优化方案先成为候选，再经过实验、整体评价和发布门禁。
+## 3. Frozen foundation and variable capabilities
 
-这是本项目的设计重点，不构成“DSH 没有任何相似扩展”或业界首创的断言。
+Kernel, model Provider configuration, Sandbox, Session/Workspace/Trajectory stores, Gateway, and permission enforcement are frozen runtime components of an AgentVersion. They may still be managed as Cordis plugins, but are not the everyday decomposition surface for Agent authors. Upgrades create a new version and receive independent validation.
 
-## 3. 固定组成与可变能力结构
+Standard capability vocabulary is a recommended starting point, not a mandatory template:
 
-### 3.1 固定组成
-
-Kernel、模型 Provider 配置、Sandbox、Session/Workspace/Trajectory Store、Gateway 和权限执行机制，是 AgentVersion 内冻结的运行组成。
-
-它们仍可使用 Cordis 插件安装和管理，但不属于 Agent 定义者日常自由细拆的能力面。冻结不代表永久不可升级；升级必须进入新版本并接受独立验证，不能在一次 Execution 中静默切换。
-
-统计、协议校验、强制权限、取消、持久化和资源隔离，不得因为某个能力插件被替换而失效。
-
-### 3.2 可自由组合的能力面
-
-以下能力面是框架提供的标准词汇和推荐起点，不是强制模板。定义者可以自由选择、拆分、合并、重排和组合，也可以在版本化契约下定义新的能力面；新能力面必须经过框架注册和契约审核，不能用自定义名称绕过权限、轨迹或治理要求：
-
-| 能力面 | 允许细化的典型职责 |
-|---|---|
-| 上下文与知识 | 信息选择、检索策略、证据整理、上下文组装、压缩策略 |
-| 任务与规划 | 目标与约束建模、任务分解、依赖计划、重新规划 |
-| 推理与决策 | 候选生成、比较、风险权衡、选择、决策解释 |
-| 工具使用 | 工具选择、参数构造、结果解释、替代策略 |
-| 验证与纠错 | 结果验收、证据检查、错误诊断、修正方案 |
-| 协作 | 委派、分工、报告汇总、冲突处理 |
-| 自我评估 | 完成度、置信度、证据充分性、人工介入建议 |
-| 交互与沟通（按需） | 澄清策略、反馈处理、解释和进度沟通 |
-| 策略与风险判断（按需） | 风险识别、策略解释、升级审批建议 |
-
-“自我评估”是执行 Agent 的能力，其声明不是最终验收证据；独立评估器仍须验证结果。“策略与风险判断”可以提出建议，但不能修改平台强制权限。
-
-轨迹学习、优化候选生成和发布属于框架治理平面，不再并列成普通执行 Agent 的“自我进化能力面”。治理组件本身可以插件化，但不允许被评估的 Agent 修改自己的评分器、历史证据或发布规则。
-
-这些能力面不是强制流程，也不是语义上绝对互斥的学科分类。定义者可以从空白图开始构造自定义拓扑。每个 Seat 必须指定主要职责、契约、输入输出和依赖；必要的数据依赖必须显式声明，禁止通过共享可变上下文形成隐性耦合。
-
-## 4. 人定义结构，Agent 执行结构
-
-定义者在发布前自由选择能力面、拆分 Plugin Seat、绑定实现并配置治理拓扑。框架提供推荐 Profile 和标准 Seat，但它们是可复用起点，不是强制流程。
-
-AgentVersion 冻结：
-- 固定运行组成及配置摘要；
-- 能力面与 Seat 定义；
-- 插件版本、包摘要及参数；
-- 依赖、允许的分支和调用关系；
-- 治理分组、评价标准及发布策略。
-
-运行中的 Agent 可以在已授权结构内选择工具、分支和步骤，但不能新增 Seat、安装替代实现、修改权限或改写治理规则。
-
-分析器可提出拆分、合并、替换、参数调整、重排及依赖调整建议。建议必须经定义者审核成为候选版本，再按既定门禁验证和发布。当前不引入执行 Agent 自主修改结构的机制。
-
-## 5. 自由拓扑与四道边界
-
-- **执行拓扑**：哪些能力调用哪些能力，输入输出如何流转，哪些分支、循环与并行路径被允许。
-- **观察拓扑**：记录哪些操作、阶段及输入输出引用，如何关联到 Seat、Execution 和事实日志。
-- **治理拓扑**：哪些 Seats 共享分析视角和评价指标，如何汇入整体 Agent 评价。
-
-定义者可以自由创建执行图，不要求套用固定 Profile。推荐 Profile 只是新项目的起点，不限制成熟 Agent 的自定义拓扑。一个插件可以记录多个阶段，多个插件可以由同一个分析器处理。无需为每个插件配置一个分析 Agent。
-
-关键能力可以细拆为更多插件。独立契约必须清晰；版本、失败模式、优化目标或权限边界中至少有实际治理需求。拆分代价也进入整体评估，包括额外调用、延迟、上下文损失和接口错误。
-
-## 6. 核心闭环
-
-```text
-人定义能力与治理拓扑
-  → 发布冻结 AgentVersion
-  → Cordis 装配固定组成与能力插件座
-  → 执行并记录所有参与插件的轨迹
-  → 汇总完整 Agent Trace
-  → 跨执行样本综合分析与独立整体评价
-  → 形成插件或拓扑优化方案
-  → 定义者审核候选版本
-  → 回放 / 隔离实验 / 整体对比
-  → 发布或拒绝；必要时回滚版本
-```
-
-分析可以定位到单插件，但分析依据必须包含相关上下游和整体任务结果。即使候选只改一个插件，也必须评估整个 Agent。
-
-## 7. 事实与轨迹契约
-
-Session 记录可恢复、模型可见的事实；Trajectory 描述能力插件如何参与执行。两者通过稳定事件 ID、Execution ID 和操作 ID 关联，轨迹投影应可由事实重建并去重。
-
-四层结构：
-
-1. Plugin Event：单次运行事实。
-2. Plugin Trace：同一插件操作的开始、结果、失败与关联。
-3. Agent Trace：本次运行所有参与插件的操作图和最终结果。
-4. Evaluation Dataset：多个完整 Agent Trace、任务类型、输入版本和独立验收结果。
-
-至少保留 Agent/Version、Seat/Plugin/Version、Execution/Operation、父操作或依赖引用、事件序号、时间、状态、输入输出引用、错误、用量和耗时。
-
-“全部插件轨迹”指覆盖所有参与执行的插件；未调用的 Seat 标记为未调用，不伪造调用。缺失终态、丢失引用或事件缺口必须标注为不完整，不能默认为成功。未结束操作不能算失败，也不能算成功；调用次数按操作计数，不能把开始与结束两个事件算成两次调用。
-
-执行图只提供关联证据。错误传播解释和因果假设仍需实验验证，不能凭时间先后认定因果。轨迹不要求暴露模型私有思维链，记录可观察输出、决策产物及可验证证据即可。
-
-## 8. 综合分析与优化
-
-分析输入是完整 Agent Trace 集合及任务结果，允许通过治理分组分工处理，但必须保留跨组依赖并汇总到同一整体评估。
-
-输出依次区分：
-
-Observation（事实）→ Finding（归纳）→ Hypothesis（待验证解释）
-→ Optimization Proposal（变更方案）→ Candidate Experiment（候选实验）
-→ Agent Evaluation（整体评价）→ Release Decision（发布决定）
-
-局部指标用于诊断；最终目标包括任务完成、结果质量、约束满足、安全、副作用、成本、延迟及人工介入。它们不能简单平均成所有插件成功率。
-
-候选必须说明改动范围、证据引用、预期收益、风险、验证方案和回滚目标。先比较单一变化；确需组合变化时记录其耦合，避免无法归因。
-
-同一评测资产、输入分布和冻结基础设施下比较基线与候选；记录模型及工具的不确定性。回放既有工具结果只能验证部分执行逻辑，不能冒充真实工具执行的效果验证。
-
-局部提升但整体关键指标回退时拒绝发布。评价准则事先固定；分析器不得事后修改评分标准来通过候选。回滚版本不能撤销已经发生的外部副作用，副作用恢复必须另有业务协议。
-
-## 8.5 Agent 专属评价包
-
-评价标准不是框架的单一全局分数。每个可发布的 AgentTemplate 必须携带一个版本化 `EvaluationPackage`：`Evaluator` 定义业务判断，`EvaluationDataset` 定义带稳定 ID 和版本的任务案例，`Gates` 定义通用运行指标与该 Agent 的发布门禁。装配器冻结三者并生成 `evaluationDigest`，写入 AgentVersion。
-
-候选实验默认使用该 Dataset；若指定案例，案例 ID、输入和 expected 仍须来自同一数据集版本。基线和候选使用同一 Evaluator、Dataset、Gates、环境和记忆摘要。评价器实现摘要、数据集摘要和门禁摘要进入实验证据，发布前重新核验。切换评价器或数据集会形成新的评价包，不能伪装成原 Agent 的插件优化。
-
-LLM 评价只能作为结构化软评价：`llmRubric` 为每个 Agent 定义维度、分数锚点和证据要求；模型必须返回维度判断、证据事件、主张、置信度和不确定性。框架保存 evaluator／model／prompt／rubric 版本，聚合重复评价并计算分歧；低置信度或高分歧进入 `needs-review`。基线与候选优先做成对比较。LLM 评价不得覆盖确定性门禁，也不得直接证明插件因果或发布代码变更。
-
-框架负责 Trace 完整性、未知副作用、最终状态、可靠性、成本、延迟和重试门禁；Evaluator 负责正确性、约束满足、证据质量、工具质量或协调质量等业务维度。不同 Agent 可以拥有完全不同的 Dataset 和维度，但都通过同一实验与发布协议。
-## 9. Wiki 记忆
-
-每个 Agent 实例拥有一个 Wiki；所有插件按授权范围读取该 Agent 的共同记忆。插件可保留调用内的临时工作状态，但不各自建立长期知识孤岛。
-
-原始来源写入不可变内容寻址 Artifact。记忆编译可以由普通能力插件承担：读取来源，产出标题、Markdown、事实／假设标记、来源引用和基准 release 的 proposal。发布者核验后，用 expected-release CAS 发布。旧 release 保留，链接检查拒绝不存在的页面引用；冲突保留记录，不能静默覆盖。
-
-Wiki 是发布后的知识视图，不代替原始 Session／Trace。读入模型的页内容、页版本和 release 记录在 `memory/read`；节点从不可变上下文获取同一快照。对照实验固定完整记忆内容摘要，不能让基线和候选各读一次“最新记忆”。
-
-Team 和 Supreme 的共享 Wiki 是独立命名空间：成员读自身 Agent、所属 Team 和 Supreme 已发布内容；成员可提出共享知识更新，Team Leader 发布 Team 知识，Supreme 发布跨团队知识。不共享成员的私有可变上下文。
-
-## 10. 单 Agent 的层级组合
-
-Supreme → Team Leader → Member 都是完整的 `GovernedAgentRuntime + AgentVersion`。角色区别来自能力拓扑和协议权限，不新增另一套内核。人通过 Supreme 入口提交任务；Supreme 派发给直系 Leader，Leader 派发给直系 Member。
-
-任务先持久化再执行，稳定 request ID 去重；每个 Agent 有独立 Session，单个 Agent 的并发任务排队。报告完成与成果验收分开：父 Agent 的协调插件必须给出每个子报告的 accept/reject、理由和证据摘要；框架再检查子 Agent 原始请求、版本、输出、事件和终态摘要。必需子任务未通过时父任务不能 accepted。
-
-完成落盘后、报告提交前崩溃，可以从原 Session 找回完成结果并补交回执；未知副作用保留 interrupted，禁止盲目重放。需要返工时，由父 Agent 创建新的任务键，原报告保留。跨团队工作由 Supreme 的协调插件通过不同 Leader 组合完成，不能跳过层级权限。
-
-这里的 A2A 是内部持久任务／报告协议，不声明兼容外部同名网络标准。默认一个进程承载多个独立 Agent；整个应用在 Docker 内运行即可，不要求每个 Agent 一个容器。
-
-## 11. 本版工程验收
-
-| 验收面 | 本版验证方式 |
+| Capability area | Typical decomposition |
 | --- | --- |
-| 通用分化 | 模板只提供版本、插件、拓扑和评估器；不修改核心即可运行新 Agent |
-| 生命周期 | 全量预检、同实例激活、恰好一次释放、清理异常记录失败 |
-| 执行语义 | 按边传递、分支／并行／有界循环、重试显式关联前次尝试 |
-| 轨迹 | Session 投影、输入输出证据、终态摘要、恢复与篡改检测 |
-| 综合治理 | 上下游证据形成假设，单上游干预配对验证，整 Agent 质量门禁 |
-| 发布证据 | 来源事件实际存在、绑定原执行，固定评估器身份与实现摘要、输入、版本、环境和记忆，发布前重验 |
-| Wiki | 来源真实性、不可变旧版本、CAS 冲突、发布权限、作用域和链接检查 |
-| 多 Agent | 两个 Leader 的独立团队、逐级验收、报告核验、队列取消和冷恢复 |
-| Docker | 应用镜像内完整验收；沿用并回归已有 Docker Sandbox 隔离测试 |
+| Context and knowledge | selection, retrieval, evidence organization, context assembly, compression |
+| Tasks and planning | goals, constraints, decomposition, dependency plans, replanning |
+| Reasoning and decision | candidate generation, comparison, risk trade-offs, selection, explanation |
+| Tool use | selection, argument construction, result interpretation, fallback |
+| Verification and correction | acceptance, evidence checks, diagnosis, repair |
+| Collaboration | delegation, role split, report aggregation, conflict handling |
+| Self-evaluation | completion, confidence, evidence sufficiency, escalation |
+| Interaction and communication | clarification, feedback, explanation, progress |
+| Strategy and risk | risk detection, strategy explanation, approval escalation |
 
-不新增多租户、跨主机租约、宿主机 OS 隔离实现或向量数据库。可信宿主负责提供模型／工具、敏感信息配置和 Wiki 适配器；插件代码在本机开发者信任域内。哈希用于发现证据不一致，不声称抵抗能改写全部文件与程序的本机管理员。
+Capability areas are composable rather than fixed stages. A Seat declares its responsibility, contract, I/O, and dependencies; required data dependencies must be explicit.
 
-## 12. 当前实现与最终定义
+## 4. Human-defined structure
 
-截至 2026-09-09，本节之外的规范性要求应与实际实现区分：当前综合分析以运行统计和特定上下游归因规则为主，提案内容由调用方提供，尚无通用自动优化专家；动态评估已有可选 JSONL 保存，但反馈调度 checkpoint 未持久化。产品入口仍为 SDK 和示例脚本。最新验证结果统一记录在 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)，历史验收不代表持续运行保证。
+Before release, the author chooses capability areas, splits Plugin Seats, binds implementations, and configures governance topology. An AgentVersion freezes runtime configuration, Seat definitions, plugin versions and parameters, dependencies and allowed control flow, governance groups, evaluation criteria, and release policy.
 
-本版已经以统一入口连接模板、Cordis 能力拓扑、Kernel、Session／Trace、Wiki、候选治理和三级团队。详细代码入口见 [CODE_MAP.md](CODE_MAP.md)，实际验收与保留边界见 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)。
+An executing Agent may choose tools and branches inside that authorized structure, but cannot add Seats, install replacements, change permissions, or rewrite governance rules. An analyzer may propose split, merge, replacement, parameter, ordering, or dependency changes. A human must approve a candidate before experiment and release.
 
-通用基座不会预装所有业务能力，也不会凭一组确定性示例声称真实模型在实际任务上的质量已经合格。具体 Agent 的 Provider、领域评估器和数据集由定义者提供，仍须跑同样的治理门禁。
+## 5. Topologies and boundaries
 
-Governed Agent Harness 是单机实验用的 Agent 运行与演进框架：冻结执行组成，由人定义并细化能力拓扑，在 Cordis 上运行插件，结合全 Agent 轨迹提出优化假设，再以整体效果验证驱动版本演进；多 Agent 是这一基座的受治理层级组合。
+Execution topology defines calls, data flow, branches, loops, and parallel paths. Observation topology defines events and evidence references. Governance topology defines which Seats share analysis and evaluation. Authors may start from a blank graph; recommended Profiles are reusable defaults.
+
+One plugin may cover several stages and several plugins may share one analyzer. No per-plugin analysis Agent is required. Finer decomposition is justified only when it creates a real governance need in contracts, failure modes, optimization targets, or permissions; decomposition cost (calls, latency, context loss, interface errors) enters whole-Agent evaluation.
+
+## 6. Core loop
+
+Human defines capability and governance topology → publish frozen AgentVersion → Cordis assembles foundation and Seats → execute and record all plugin traces → aggregate complete Agent Trace → analyze samples and independently evaluate the whole Agent → produce plugin/topology proposal → author approves candidate → replay or isolated experiment → publish or reject, with rollback when needed.
+
+An analysis may point to one plugin, but must include relevant upstream/downstream evidence and whole-task outcome. A one-plugin candidate still receives whole-Agent evaluation.
+
+## 7. Facts and trace contract
+
+Session records recoverable, model-visible facts. Trajectory describes capability participation. Stable event, Execution, and operation IDs connect them; projection must be rebuildable and idempotent.
+
+Four levels are retained: Plugin Event, Plugin Trace, Agent Trace, and Evaluation Dataset. Events include Agent/Version, Seat/Plugin/Version, Execution/Operation, parent/dependency references, sequence, time, status, I/O references, errors, usage, and latency. An uncalled Seat is marked uncalled; missing terminal evidence is incomplete, never implicit success. The system records observable outputs and evidence, not private chain-of-thought.
+
+## 8. Integrated analysis and optimization
+
+Analysis consumes complete Agent Trace sets and independent outcomes. Outputs remain distinct: Observation → Finding → Hypothesis → Optimization Proposal → Candidate Experiment → Agent Evaluation → Release Decision.
+
+Local metrics diagnose; release targets completion, quality, constraints, safety, side effects, cost, latency, and intervention. Candidates state scope, evidence, expected benefit, risks, validation, and rollback. Baseline and candidate use identical evaluation assets, input distribution, frozen infrastructure, and memory. A local improvement with whole-Agent regression is rejected.
+
+### 8.5 Agent-specific EvaluationPackage
+
+Every releasable AgentTemplate carries a versioned `EvaluationPackage`: `Evaluator` defines business judgment, `EvaluationDataset` defines stable versioned cases, and `Gates` define runtime gates plus Agent-specific release conditions. Assembly freezes all three and writes an `evaluationDigest` into AgentVersion.
+
+LLM evaluation is a structured soft signal. `llmRubric` defines dimensions, anchors, and evidence requirements. The system stores evaluator/model/prompt/rubric versions, aggregates repeated judgments, measures disagreement, and routes low-confidence or high-disagreement results to `needs-review`. LLM scores never override deterministic gates or prove causality.
+
+## 9. Wiki memory
+
+Each Agent owns a Wiki; authorized plugins read shared Agent memory while keeping temporary call state local. Immutable source Artifacts feed proposals containing pages, fact/hypothesis status, and citations. The scope owner publishes with expected-release CAS. Old Releases remain; conflicts cannot silently overwrite facts.
+
+Reads cite release and page revisions. Executions pin a complete memory snapshot, and paired experiments use the same snapshot. Team and Supreme shared Wikis are separate namespaces with explicit read and publication authority.
+
+## 10. Hierarchical composition
+
+Supreme → Team Leader → Member are all complete `GovernedAgentRuntime + AgentVersion` instances. Humans enter through Supreme; Supreme delegates to direct Leaders, Leaders to direct Members, and reports return to the immediate parent. Tasks are persisted before execution, request IDs deduplicate work, and each Agent owns an independent Session.
+
+Report submission and acceptance are separate. Parent coordination cites child evidence and may accept or reject; required rejected work prevents parent acceptance. A crash after completion but before acknowledgement can recover the result from the original Session. Unknown side effects remain interrupted and are not blindly replayed. Rework gets a new assignment key.
+
+## 11. Engineering acceptance
+
+Acceptance covers generic template branching, lifecycle cleanup, edge execution, branch/parallel/bounded-loop semantics, Session projection, evidence and recovery, integrated governance, Wiki authority, hierarchical Teams, and Docker execution. This phase does not add multi-tenancy, cross-host leases, host OS security, or a vector database.
+
+## 12. Current implementation
+
+As of 2026-09-09, integrated analysis still relies on runtime statistics and targeted attribution rules; proposal content is caller supplied, and dynamic feedback checkpoints are not persistent. The SDK, templates, and examples are the supported entry points. Current verification and retained boundaries are recorded in [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md).
+
+Governed Agent Harness is a single-machine Agent execution and evolution framework: freeze the runtime foundation, let humans define and refine capability topology, run plugins on Cordis, use complete Agent traces to form optimization hypotheses, and evolve versions through whole-Agent evidence. Multi-Agent operation is a governed hierarchical composition of the same foundation.
 
