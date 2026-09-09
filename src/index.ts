@@ -17,6 +17,7 @@ export {governanceReport} from './governance/report.js';
 export type {MemoryPage, MemorySnapshot, MemoryProvider} from './contracts/memory.js';
 export {minimalAgentTemplate} from './templates/minimal-agent.js';
 export {toolAgentTemplate} from './templates/tool-agent.js';
+export {parseCommand, startTui, type ParsedCommand} from './cli/tui.js';
 export type {AgentTemplate, AgentHandle} from './agent.js';
 export type {AgentRequest, AgentRunResult, GovernedRuntimeOptions} from './runtime/governed-runtime.js';
 export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './providers/openai-compatible.js';
