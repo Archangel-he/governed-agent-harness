@@ -9,6 +9,7 @@ export interface FeedbackEvent {id:string;caseId:string;observedAt:number;value:
 export interface DynamicCase extends DecisionCase {status:FeedbackStatus;feedback?:FeedbackEvent}
 export interface DynamicDataset {id:string;version:string;cases:readonly DynamicCase[]}
 export interface DynamicDatasetSnapshot extends DynamicDataset {snapshotAt:number;digest:string}
+export interface DynamicScore {caseId:string;quality:number;feedbackDigest:string;status:'scored'|'unscored'}
 
 /** In-memory reference store; replace only this boundary when persistence is needed. */
 export class DynamicEvaluationStore {
@@ -46,3 +47,4 @@ export class DynamicEvaluationStore {
  }
  list():DynamicCase[]{return [...this.items.values()].map(item=>Object.freeze({...item}));}
 }
+export function scoreDynamicSnapshot(snapshot:DynamicDatasetSnapshot,judge:(input:unknown,output:unknown,feedback:unknown)=>{quality:number}):DynamicScore[]{return snapshot.cases.map(item=>{if(item.status!=='scored'||!item.feedback)return{caseId:item.id,quality:0,feedbackDigest:'',status:'unscored'};const result=judge(item.input,item.output,item.feedback.value);if(!Number.isFinite(result.quality)||result.quality<0||result.quality>1)throw new Error('Dynamic score must be in [0,1]');return{caseId:item.id,quality:result.quality,feedbackDigest:evidenceDigest(item.feedback),status:'scored'}})}

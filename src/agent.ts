@@ -12,6 +12,7 @@ import {freezeEvaluation,type VersionedEvaluation,type EvaluationCase} from './g
 import {freezeTopology} from './topology/schema.js';
 import {maintainMemoryWithModel} from './memory/trajectory-proposals.js';
 import {EpisodicMemoryStore,ProgressiveMemoryRetriever} from './memory/episodic.js';
+import type {MemoryProvider} from './contracts/memory.js';
 
 export interface AgentTemplate {
  agentId:string;
@@ -21,6 +22,7 @@ export interface AgentTemplate {
  services?:Omit<GovernedRuntimeOptions,'root'|'plugins'>;
  memoryMaintenance?:boolean;
  memoryMode?:'stateless'|'persistent';
+ memoryProvider?:MemoryProvider;
 }
 export function memorySnapshot(releases:MemoryRelease[]):NonNullable<AgentRequest['memory']>{
  const pages=releases.flatMap(release=>Object.values(release.pages).map(page=>({pageId:`${release.scope}:${release.owner}/${page.pageId}`,revision:page.revision,content:`Status: ${page.status}\n${page.markdown}\nSources: ${page.sources.map(s=>s.hash).join(', ')}`})));
@@ -39,7 +41,7 @@ export function assembleAgent(root:string,definition:AgentTemplate){
  const resolver=new RuntimeEvidenceSourceResolver(runtime.sessions,[agentId]);
  let memoryMaintenanceError:string|undefined;
  const persistentMemory=definition.memoryMode==='persistent'||definition.memoryMaintenance===true;
- const run=async(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>{const base=options.memory??memorySnapshot([wiki.pinned('agent',agentId)]);const recalled=!persistentMemory||options.memory?{details:[]}:retriever.search(String(input),3000);const memory=freezeTopology({...base,pages:[...base.pages,...recalled.details.map(row=>({pageId:`episode:${row.id}`,revision:1,content:`${row.summary}\n${row.details}`}))]});const result=await runtime.run({agentId,requestId,version:options.version??version,input,memory,...(options.signal?{signal:options.signal}:{})});if(persistentMemory)try{episodes.record({id:result.executionId,agentId,sessionId:'agent:'+agentId,executionId:result.executionId,occurredAt:Date.now(),summary:`${result.status}: ${String(result.output??result.error??'')}`.slice(0,240),details:JSON.stringify({input,output:result.output,error:result.error}),tags:['execution',result.status],outcome:{status:result.status}})}catch(error){if(!String(error).includes('Duplicate episode'))throw error}if(definition.memoryMaintenance&&definition.services?.kernel?.model&&result.status==='completed')try{await maintainMemoryWithModel(wiki,result.trace,definition.services.kernel.model,{scope:'agent',owner:agentId,proposedBy:agentId});memoryMaintenanceError=undefined}catch(error){memoryMaintenanceError=String(error)}return result};
+ const run=async(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];memoryProvider?:MemoryProvider;signal?:AbortSignal}={})=>{const provided=options.memoryProvider??definition.memoryProvider;const base=options.memory??(provided?await provided.read(input,3000):memorySnapshot([wiki.pinned('agent',agentId)]));const recalled=!persistentMemory||options.memory||provided?{details:[]}:retriever.search(String(input),3000);const memory=freezeTopology({...base,pages:[...base.pages,...recalled.details.map(row=>({pageId:`episode:${row.id}`,revision:1,content:`${row.summary}\n${row.details}`}))]});const result=await runtime.run({agentId,requestId,version:options.version??version,input,memory,...(options.signal?{signal:options.signal}:{})});if(persistentMemory)try{episodes.record({id:result.executionId,agentId,sessionId:'agent:'+agentId,executionId:result.executionId,occurredAt:Date.now(),summary:`${result.status}: ${String(result.output??result.error??'')}`.slice(0,240),details:JSON.stringify({input,output:result.output,error:result.error}),tags:['execution',result.status],outcome:{status:result.status}})}catch(error){if(!String(error).includes('Duplicate episode'))throw error}if(provided?.record)await provided.record({agentId,executionId:result.executionId,input,output:result.output,status:result.status});if(definition.memoryMaintenance&&definition.services?.kernel?.model&&result.status==='completed')try{await maintainMemoryWithModel(wiki,result.trace,definition.services.kernel.model,{scope:'agent',owner:agentId,proposedBy:agentId});memoryMaintenanceError=undefined}catch(error){memoryMaintenanceError=String(error)}return result};
  const evaluate=async(result:Awaited<ReturnType<typeof run>>,input:unknown,expected?:unknown)=>evaluateTrace(result.trace,evaluation.gates,evaluation.evaluator.judge(input,result.output??null,expected));
  const compare=async(change:CandidateChange,cases:readonly EvaluationCase[]=evaluation.dataset.cases)=>{
   if(change.baselineVersionId===version.id && change.candidateVersionId!==version.id) {
@@ -52,3 +54,4 @@ export function assembleAgent(root:string,definition:AgentTemplate){
  };
  return {version,runtime,versions,wiki,episodes,retriever,resolver,evaluation,evaluationDigest,run,evaluate,compare,get memoryMaintenanceError(){return memoryMaintenanceError}};
 }
+

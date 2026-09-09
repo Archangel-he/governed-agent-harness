@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from 'node:fs';import {governanceReport} from '../governance/report.js';
+const input=process.argv[2];if(!input)throw new Error('Usage: tsx src/examples/governance-report.ts <trace.json> [plugin,...]');const trace=JSON.parse(readFileSync(input,'utf8'));const ids=new Set((process.argv[3]??'').split(',').filter(Boolean));const report=governanceReport(trace,ids);const output=JSON.stringify(report,null,2)+'\n';if(process.argv[4])writeFileSync(process.argv[4],output);else process.stdout.write(output);

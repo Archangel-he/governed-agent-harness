@@ -3,7 +3,7 @@ export {assembleAgent, memorySnapshot, type AgentTemplate} from './agent.js';
 export {definePlugin, type CapabilityPlugin} from './plugins/capability.js';
 export {evaluateTrace, defaultProfile, type Evaluation, type EvaluationProfile, type TaskOutcome} from './governance/evaluation.js';
 export {freezeEvaluation, type EvaluationCase, type EvaluationDataset, type VersionedEvaluation} from './governance/evaluation-package.js';
-export {DynamicEvaluationStore, type DynamicCase, type DynamicDatasetSnapshot, type FeedbackEvent, type FeedbackStatus} from './governance/dynamic-evaluation.js';
+export {DynamicEvaluationStore, scoreDynamicSnapshot, type DynamicCase, type DynamicDatasetSnapshot, type FeedbackEvent, type FeedbackStatus, type DynamicScore} from './governance/dynamic-evaluation.js';
 export {fileFeedbackSource, httpFeedbackSource, type FeedbackSource} from './governance/feedback-source.js';
 export {extractMemoryCandidates, extractMemoryCandidatesWithModel, detectMemoryConflicts, consolidateMemoryCandidates, proposeMemory, maintainMemory, maintainMemoryWithModel, type MemoryCandidate, type ModelMemoryCandidate, type ProposalOptions} from './memory/trajectory-proposals.js';
 export {inspectWiki, maintainWiki, retrieveMemory, type WikiHealth} from './memory/maintenance.js';
@@ -15,6 +15,8 @@ export {createPluginOptimizationProposal, type PluginOptimizationProposal} from 
 export {compareInterventions, type CrossEvaluation} from './governance/cross-evaluation.js';
 export {governanceReport} from './governance/report.js';
 export type {MemoryPage, MemorySnapshot, MemoryProvider} from './contracts/memory.js';
+export {minimalAgentTemplate} from './templates/minimal-agent.js';
+export {toolAgentTemplate} from './templates/tool-agent.js';
 export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './providers/openai-compatible.js';
 export type {AgentVersion} from './contracts/index.js';
 export type {TopologyDefinition, TopologyNode, TopologyEdge} from './topology/schema.js';
