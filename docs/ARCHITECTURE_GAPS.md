@@ -63,3 +63,5 @@ docker run --rm --network none governed-agent-harness:local
 ## 真实模型预验收记录（2026-09-09）
 
 已通过硅基流动 OpenAI-compatible Provider 启动 `npm run experiment:model-feedback`。实验目录被创建，说明本地模板装配和启动路径正常；当前网络请求超过 30 秒未返回，未生成 `report.json`，因此不宣称真实模型执行成功。API key 未写入仓库或实验报告。重试应先确认 Provider 可达性和模型响应，再运行同一命令。
+
+追加记录：按当前硅基流动模型列表切换 `deepseek-ai/DeepSeek-V4-Flash`，并用官方 Chat Completions 最小请求（messages、stream、max_tokens）及 JSON 模式分别测试；接口仍返回 `20015 parameter invalid`。模型列表 GET 正常，聊天 POST 未获得模型输出，因此真实模型验收仍受 Provider 请求/账号状态阻塞。
