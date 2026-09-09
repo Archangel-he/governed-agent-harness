@@ -141,6 +141,8 @@ Observation（事实）→ Finding（归纳）→ Hypothesis（待验证解释�
 
 候选实验默认使用该 Dataset；若指定案例，案例 ID、输入和 expected 仍须来自同一数据集版本。基线和候选使用同一 Evaluator、Dataset、Gates、环境和记忆摘要。评价器实现摘要、数据集摘要和门禁摘要进入实验证据，发布前重新核验。切换评价器或数据集会形成新的评价包，不能伪装成原 Agent 的插件优化。
 
+LLM 评价只能作为结构化软评价：`llmRubric` 为每个 Agent 定义维度、分数锚点和证据要求；模型必须返回维度判断、证据事件、主张、置信度和不确定性。框架保存 evaluator／model／prompt／rubric 版本，聚合重复评价并计算分歧；低置信度或高分歧进入 `needs-review`。基线与候选优先做成对比较。LLM 评价不得覆盖确定性门禁，也不得直接证明插件因果或发布代码变更。
+
 框架负责 Trace 完整性、未知副作用、最终状态、可靠性、成本、延迟和重试门禁；Evaluator 负责正确性、约束满足、证据质量、工具质量或协调质量等业务维度。不同 Agent 可以拥有完全不同的 Dataset 和维度，但都通过同一实验与发布协议。
 ## 9. Wiki 记忆
 
@@ -179,6 +181,8 @@ Supreme → Team Leader → Member 都是完整的 `GovernedAgentRuntime + Agent
 不新增多租户、跨主机租约、宿主机 OS 隔离实现或向量数据库。可信宿主负责提供模型／工具、敏感信息配置和 Wiki 适配器；插件代码在本机开发者信任域内。哈希用于发现证据不一致，不声称抵抗能改写全部文件与程序的本机管理员。
 
 ## 12. 当前实现与最终定义
+
+截至 2026-09-09，本节之外的规范性要求应与实际实现区分：当前综合分析以运行统计和特定上下游归因规则为主，提案内容由调用方提供，尚无通用自动优化专家；动态评估已有可选 JSONL 保存，但反馈调度 checkpoint 未持久化。产品入口仍为 SDK 和示例脚本，TUI 已移除。最新验证结果统一记录在 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)，历史验收不代表持续运行保证。
 
 本版已经以统一入口连接模板、Cordis 能力拓扑、Kernel、Session／Trace、Wiki、候选治理和三级团队。详细代码入口见 [CODE_MAP.md](CODE_MAP.md)，实际验收与保留边界见 [ARCHITECTURE_GAPS.md](ARCHITECTURE_GAPS.md)。
 

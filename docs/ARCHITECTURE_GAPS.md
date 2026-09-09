@@ -42,7 +42,19 @@ docker run --rm --network none governed-agent-harness:local
 
 实际结果以本轮最终验证输出为准。Docker 应用镜像使用固定的 `node:24.18.0-bookworm-slim`，以 `node` 用户运行。宿主机回归包含真实 Docker Sandbox 的网络、只读根、资源限制、输出、超时与取消测试。
 
-## 本轮实测记录（2026-09-09）
+## 当前能力边界（2026-09-09）
+
+- 综合优化：`analyzeCapabilityTrajectory` 主要统计插件运行成功率；`attributeTrace` 基于失败下游与成功上游的实际数据传递形成假设，`assessAttribution` 验证单上游干预。`governanceReport` 当前没有自动串联该归因流程。提案构造函数接收调用方给出的假设和标准，不能视为自动优化专家。
+- LLM 评价：`llmRubric`、`aggregateLLMEvaluation` 和 `compareLLMEvaluations` 提供版本化维度、证据引用、置信度、分歧、暂定／结算状态和成对比较；LLM 分数仍是软评价，不能覆盖确定性门禁，也不能单独证明因果。低置信度或高分歧结果进入 `needs-review`。
+- 动态评估：Store 可选 JSONL 持久化与重新读取；反馈调度器需要调用方驱动 `tick()`，checkpoint 仍是内存状态。反馈流恢复和持续无人值守没有获得长期验证。
+- 使用入口：目前是 SDK、模板和示例脚本。TUI 已移除；具体模型、工具、业务评价标准仍由开发者提供。
+- 设计规范描述目标和约束，不代表其中所有自动化环节已实现。综合优化的下一步方案尚在讨论，本次仅更新文档。
+
+## 当前实测记录（2026-09-09，移除 TUI 后）
+
+`npm run verify` 退出码 0：103 项测试通过，0 失败、0 跳过；模板、团队、集成及其他脚本均通过。原始输出位于本地 `.tmp/verify-remove-tui.log`。本次没有重新运行付费模型或重建应用 Docker 镜像，不将测试通过等同于业务效果或长期可靠性验证。
+
+## 历史实测记录（2026-09-09，Wiki／Team 轮次）
 
 `npm run verify` 退出码 0：86 项测试通过，0 失败、0 跳过；六步 Decision／Tool、模板归因实验、五 Agent 团队和兼容示例全部通过。
 

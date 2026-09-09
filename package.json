@@ -6,7 +6,6 @@
   "scripts": {
     "experiment:model-feedback": "tsx src/examples/model-feedback.ts",
     "report": "tsx src/examples/governance-report.ts",
-    "tui": "tsx src/cli/tui.ts",
     "check": "tsc --noEmit",
     "demo": "tsx src/examples/demo.ts",
     "skeleton": "tsx src/examples/skeleton-check.ts",

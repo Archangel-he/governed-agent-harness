@@ -33,8 +33,8 @@ docker run --rm --network none governed-agent-harness:local
 随后登记决策、回填明确标记为 `simulated-acceptance` 的模拟反馈，并调用 `agent.evaluate(result, input, feedback)`。
 报告和冻结快照写入输出目录的 `report.json`，原始轨迹位于同目录 `runtime/session.jsonl`。
 这是链路实验：反馈不是现实业务反馈，费用尚未计价，不能据此证明收益或长期可靠性。
-此命令不加入默认测试；默认测试通过无网络模型验证相同流程。动态数据集仍为内存实现，
-本示例保存快照供审计，尚不提供持续反馈监听和重启后自动回填。
+此命令不加入默认测试；默认测试通过无网络模型验证相同流程。本示例使用内存动态数据集并保存快照供审计。
+`DynamicEvaluationStore` 可选传入文件路径，支持 JSONL 保存和重新读取；`FeedbackScheduler.tick()` 由调用方驱动拉取反馈，游标仍在内存中，尚不提供可靠的持续监听和重启后自动回填。
 
 ## 定义自己的 Agent
 
@@ -64,7 +64,7 @@ const report = await agent.evaluate(result, input);
 
 Wiki 记忆也支持自动维护：`maintainMemory(wiki, trace, options)` 会从轨迹中的显式 `knowledge/candidate` 事实提取候选、合并同主题冲突、生成带来源 Artifact 的 Proposal，并自动发布新的不可变 Release。冲突会保留为 `hypothesis`，旧 Release 始终保留，发布失败不会覆盖旧记忆。
 默认 Agent 是无状态执行：每次运行只使用显式输入和版本化 Wiki。设置 `memoryMode: 'persistent'` 才会启用 Episodic Memory；设置 `memoryMaintenance: true` 会同时启用持久记忆和自动 Wiki 维护。
-组装后的 Agent 还会自动把每次执行写入 `memory/episodes.jsonl`，下一次运行先按输入检索相关经历，再将摘要和详情按预算注入模型上下文。轨迹治理可使用 `analyzeCapabilityTrajectory`，只分析 capability 插件，不把基础设施插件生成优化候选。
+启用持久记忆后，组装后的 Agent 才会把每次执行写入 `memory/episodes.jsonl`，下一次运行先按输入检索相关经历，再将摘要和详情按预算注入模型上下文。自动 Wiki 维护还需要配置 Kernel 模型，并在执行成功后触发；可通过 `memoryMaintenanceError` 查看维护失败。轨迹治理可使用 `analyzeCapabilityTrajectory`，按传入的 capability 插件集合统计运行结果；它本身不生成优化代码。
 
 复制 [text-agent.ts](src/templates/text-agent.ts)，填写 `AgentTemplate`：
 
@@ -79,6 +79,8 @@ const evaluation = await agent.evaluate(result, task);
 插件共享该 Agent 的已发布 Wiki，临时工作状态留在调用中。Wiki 更新先引用原始来源并生成 proposal，再由范围所有者发布；新发布不会改变已经固定的执行记忆。团队示例见 [team-acceptance.ts](src/examples/team-acceptance.ts)。
 
 ## 阅读入口
+
+当前使用入口为 TypeScript SDK 和上述示例脚本，TUI 已移除。LLM 评价可通过版本化 `llmRubric`、`aggregateLLMEvaluation` 和 `compareLLMEvaluations` 接入；结果必须绑定证据事件，并在低置信度或高分歧时进入 `needs-review`，不能单独越过确定性门禁。验证范围与记录见 [实现边界与验收](docs/ARCHITECTURE_GAPS.md)。
 
 - [代码导航](docs/CODE_MAP.md)：当前真实调用路径。
 - [产品与架构规范](docs/GOVERNED_AGENT_HARNESS_SPEC.md)：设计原则与本轮增量。

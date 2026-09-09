@@ -29,7 +29,11 @@
 | `memory/episodic.ts` | 执行经历持久化、观察记忆和渐进式检索 |
 | `memory/trajectory-proposals.ts` | 轨迹候选、模型提取、冲突合并和自动 Wiki 维护 |
 | `memory/maintenance.ts` | Wiki 健康检查和预算限制检索 |
-| `governance/feedback-scheduler.ts` | 外部反馈拉取与动态评价回填 |
+| `governance/dynamic-evaluation.ts` | 决策与延迟反馈、冻结快照、可选 JSONL 保存和重新读取 |
+| `governance/feedback-scheduler.ts` | 调用方驱动 tick 拉取反馈；checkpoint 仅在内存 |
+| `governance/analyzer.ts`、`governance/report.ts` | 能力插件成功率统计和轨迹报告；未自动串联归因与候选实验 |
+| `governance/llm-evaluation.ts` | 版本化 Rubric、证据绑定的结构化 LLM 评价、置信度／分歧和成对比较 |
+| `governance/plugin-proposal.ts` | 调用方提供假设／证据／标准，构造候选提案与实验变更 |
 | `team/hierarchy.ts` | Supreme／Leader／Member，任务队列、报告、回执、验收、冷恢复和范围记忆 |
 | `services` | Session、Artifact、Version、Registry、工作区与本机原子文件／锁 |
 | `sandbox/adapter.ts` | Docker 隔离执行；本轮沿用现有实现 |
