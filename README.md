@@ -38,6 +38,18 @@ docker run --rm --network none governed-agent-harness:local
 
 ## 定义自己的 Agent
 
+## 五分钟起步
+
+复制 [minimal-agent.ts](src/templates/minimal-agent.ts)，只填写四项：`AgentVersion`、`CapabilityPlugin`、`Topology` 和版本化 `EvaluationPackage`，然后调用：
+
+```ts
+const agent = assembleAgent('./data/my-agent', {agentId:'my-agent', ...definition});
+const result = await agent.run('request-1', input);
+const evaluation = await agent.evaluate(result, input);
+```
+
+默认运行是无状态的；需要长期经历时显式设置 `memoryMode: 'persistent'`。基础设施插件不会进入能力优化分析。
+
 公共组合入口位于 `src/index.ts`。新 Agent 只需实现 `AgentTemplate`，不需要修改运行时：
 
 ```ts

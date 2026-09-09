@@ -1,0 +1,2 @@
+import type {AgentTrace} from '../trace/events.js';import {analyzeCapabilityTrajectory} from './analyzer.js';
+export function governanceReport(trace:AgentTrace,capabilityPluginIds:ReadonlySet<string>){const analysis=analyzeCapabilityTrajectory(trace.events as any,capabilityPluginIds);return{executionId:trace.executionId,complete:trace.complete,eventCount:trace.events.length,capabilityStats:analysis.stats,findings:analysis.findings,evidenceEventIds:trace.events.map(event=>event.id)}}

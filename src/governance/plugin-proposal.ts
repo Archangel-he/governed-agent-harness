@@ -1,0 +1,3 @@
+import {evidenceDigest} from './evaluation.js';
+export interface PluginOptimizationProposal {id:string;pluginId:string;baselineVersion:string;candidateVersion?:string;affectedDownstream:string[];evidenceEventIds:string[];hypothesis:string;successCriteria:string[];status:'proposed'|'accepted'|'rejected'}
+export function createPluginOptimizationProposal(input:Omit<PluginOptimizationProposal,'id'|'status'>):PluginOptimizationProposal {if(!input.pluginId||!input.evidenceEventIds.length||!input.successCriteria.length)throw new Error('Plugin proposal requires identity, evidence and criteria');return{...input,id:evidenceDigest(input),status:'proposed'}}
