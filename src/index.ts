@@ -25,3 +25,4 @@ export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './provi
 export type {AgentVersion} from './contracts/index.js';
 export type {TopologyDefinition, TopologyNode, TopologyEdge} from './topology/schema.js';
 
+export {runOptimizationPipeline, type OptimizationFinding, type OptimizationCandidate, type OptimizationDecision, type OptimizationPipelineInput} from './governance/optimization-pipeline.js';

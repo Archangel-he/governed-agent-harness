@@ -33,9 +33,9 @@ Team path: `team/hierarchy.ts` persists role definitions and tasks → the same 
 | `governance/feedback-scheduler.ts` | Caller-driven feedback polling; checkpoint remains in memory |
 | `governance/analyzer.ts`, `governance/report.ts` | Capability success statistics and reports; attribution and candidate experiments are not auto-chained |
 | `governance/llm-evaluation.ts` | Versioned rubric, evidence-bound structured LLM evaluation, confidence/disagreement, paired comparison |
-| `governance/plugin-proposal.ts` | Builds candidate proposals from caller-supplied hypothesis, evidence, and criteria |
+| `governance/plugin-proposal.ts` | Builds candidate proposals from caller-supplied hypothesis, evidence, and criteria |\n| `governance/optimization-pipeline.ts` | Runs finding → candidate → experiment → release-decision orchestration without mutating the active version |
 | `team/hierarchy.ts` | Supreme/Leader/Member, queues, reports, receipts, acceptance, cold recovery, scoped memory |
-| `services` | Session, Artifact, Version, Registry, workspace, local atomic files/locks |
+| `services` | Session, Artifact, Version, Registry, workspace, local atomic files/locks, JSONL indexes |
 | `sandbox/adapter.ts` | Docker-isolated execution |
 | `examples/*acceptance.ts` | Six-step Agents, template governance loop, hierarchical Team acceptance |
 
@@ -50,3 +50,4 @@ Team path: `team/hierarchy.ts` persists role definitions and tasks → the same 
 `demo`, `skeleton`, `integration`, and `minimal` expose lower-level interfaces and remain compatible. `runtime/memory-runtime.ts` and `governance/release.ts` are early in-memory/demo scoring helpers; they do not change governed `LocalVersionStore` release records. Product candidate publication uses `promoteCandidate`. Kernel is a model-loop adapter, not a second Agent product.
 
 Read new code from the templates and unified entry point first; do not mistake a low-level compatibility example for another complete runtime path.
+

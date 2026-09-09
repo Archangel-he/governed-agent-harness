@@ -44,9 +44,9 @@ The application image uses `node:24.18.0-bookworm-slim` and runs as user `node`.
 
 ## Current capability boundary (2026-09-09)
 
-- Integrated optimization still relies mainly on plugin success statistics and specific upstream/downstream attribution rules. `governanceReport` does not automatically chain attribution into candidate experiments; proposal constructors receive caller-supplied hypotheses and standards.
+- `runOptimizationPipeline` now closes the local finding → candidate → experiment → decision loop without mutating the active version. Finding and candidate providers remain Agent-specific; automatic code generation and unattended release are intentionally outside this phase.
 - LLM evaluation provides versioned dimensions, evidence citations, confidence, disagreement, provisional/settled states, and paired comparison. It remains a soft signal and cannot override deterministic gates or prove causality; low confidence or high disagreement becomes `needs-review`.
-- Dynamic evaluation supports optional JSONL persistence and reload. The feedback scheduler is caller-driven and its checkpoint is in memory, so unattended long-running recovery is not claimed.
+- Dynamic evaluation supports optional JSONL persistence and reload. The feedback scheduler is caller-driven and its checkpoint is in memory. JSONL Session/Trajectory stores now maintain atomic sidecar indexes for append-time deduplication and generation tracking; reads still scan the log, so segmented cold storage and long-run capacity remain unverified.
 - The supported entry point is the SDK, templates, and example scripts. Providers, tools, and business-quality criteria are supplied by each Agent author.
 
 ## Current verification record (2026-09-09)
