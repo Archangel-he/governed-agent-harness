@@ -9,3 +9,5 @@ export function analyzeTrajectory(events: TrajectoryEvent[]): { stats: PluginSta
   const findings = stats.filter(row => row.successRate < 0.8).map(row => ({ seatId: row.seatId, pluginId: row.pluginId, statement: `${row.pluginId} success rate is ${(row.successRate * 100).toFixed(1)}%`, severity: 'warning' as const }));
   return { stats, findings };
 }
+/** Capability-only governance view; infrastructure identities are excluded by the caller's frozen binding set. */
+export function analyzeCapabilityTrajectory(events: TrajectoryEvent[],capabilityPluginIds:ReadonlySet<string>):ReturnType<typeof analyzeTrajectory>{return analyzeTrajectory(events.filter(event=>capabilityPluginIds.has(event.pluginId??'')))}

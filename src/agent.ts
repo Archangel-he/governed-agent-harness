@@ -11,6 +11,7 @@ import {evidenceDigest} from './governance/evaluation.js';
 import {freezeEvaluation,type VersionedEvaluation,type EvaluationCase} from './governance/evaluation-package.js';
 import {freezeTopology} from './topology/schema.js';
 import {maintainMemoryWithModel} from './memory/trajectory-proposals.js';
+import {EpisodicMemoryStore,ProgressiveMemoryRetriever} from './memory/episodic.js';
 
 export interface AgentTemplate {
  agentId:string;
@@ -33,9 +34,10 @@ export function assembleAgent(root:string,definition:AgentTemplate){
  for(const plugin of definition.plugins){const key=plugin.manifest.id+'@'+plugin.manifest.version;if(plugins.has(key))throw new Error('Duplicate plugin implementation');plugins.set(key,plugin)}
  const runtime=new GovernedAgentRuntime({...definition.services,root:join(root,'runtime'),plugins});
  const versions=new LocalVersionStore(join(root,'versions')),wiki=new WikiStore(join(root,'memory'));
+ const episodes=new EpisodicMemoryStore(join(root,'memory','episodes.jsonl')),retriever=new ProgressiveMemoryRetriever(episodes);
  const resolver=new RuntimeEvidenceSourceResolver(runtime.sessions,[agentId]);
  let memoryMaintenanceError:string|undefined;
- const run=async(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>{const result=await runtime.run({agentId,requestId,version:options.version??version,input,memory:options.memory??memorySnapshot([wiki.pinned('agent',agentId)]),...(options.signal?{signal:options.signal}:{})});if(definition.memoryMaintenance&&definition.services?.kernel?.model&&result.status==='completed')try{await maintainMemoryWithModel(wiki,result.trace,definition.services.kernel.model,{scope:'agent',owner:agentId,proposedBy:agentId});memoryMaintenanceError=undefined}catch(error){memoryMaintenanceError=String(error)}return result};
+ const run=async(requestId:string,input:unknown,options:{version?:AgentVersion;memory?:AgentRequest['memory'];signal?:AbortSignal}={})=>{const base=options.memory??memorySnapshot([wiki.pinned('agent',agentId)]);const recalled=retriever.search(String(input),3000);const memory=freezeTopology({...base,pages:[...base.pages,...recalled.details.map((row,index)=>({pageId:`episode:${row.id}`,revision:1,content:`${row.summary}\n${row.details}`,}))]});const result=await runtime.run({agentId,requestId,version:options.version??version,input,memory,...(options.signal?{signal:options.signal}:{})});episodes.record({id:result.executionId,agentId,sessionId:'agent:'+agentId,executionId:result.executionId,occurredAt:Date.now(),summary:`${result.status}: ${String(result.output??result.error??'')}`.slice(0,240),details:JSON.stringify({input,output:result.output,error:result.error}),tags:['execution',result.status],outcome:{status:result.status}});if(definition.memoryMaintenance&&definition.services?.kernel?.model&&result.status==='completed')try{await maintainMemoryWithModel(wiki,result.trace,definition.services.kernel.model,{scope:'agent',owner:agentId,proposedBy:agentId});memoryMaintenanceError=undefined}catch(error){memoryMaintenanceError=String(error)}return result};
  const evaluate=async(result:Awaited<ReturnType<typeof run>>,input:unknown,expected?:unknown)=>evaluateTrace(result.trace,evaluation.gates,evaluation.evaluator.judge(input,result.output??null,expected));
  const compare=async(change:CandidateChange,cases:readonly EvaluationCase[]=evaluation.dataset.cases)=>{
   if(change.baselineVersionId===version.id && change.candidateVersionId!==version.id) {
@@ -46,5 +48,5 @@ export function assembleAgent(root:string,definition:AgentTemplate){
   const selected=cases.map(c=>({id:c.id,input:c.input,...('expected' in c?{expected:c.expected}:{})}));
   return runExperiment(versions,change,selected,evaluation.gates,(candidate:LocalVersion,input)=>run(crypto.randomUUID(),input,{version:candidate as unknown as AgentVersion,memory}),evaluation.evaluator,resolver);
  };
- return {version,runtime,versions,wiki,resolver,evaluation,evaluationDigest,run,evaluate,compare,get memoryMaintenanceError(){return memoryMaintenanceError}};
+ return {version,runtime,versions,wiki,episodes,retriever,resolver,evaluation,evaluationDigest,run,evaluate,compare,get memoryMaintenanceError(){return memoryMaintenanceError}};
 }

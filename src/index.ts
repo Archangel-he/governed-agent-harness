@@ -10,6 +10,7 @@ export {inspectWiki, maintainWiki, retrieveMemory, type WikiHealth} from './memo
 export {FeedbackScheduler} from './governance/feedback-scheduler.js';
 export {createOptimizationProposal, type OptimizationProposal} from './governance/optimization-proposal.js';
 export {EpisodicMemoryStore, ObservationMemory, ProgressiveMemoryRetriever, type Episode, type Observation, type MemoryAction} from './memory/episodic.js';
+export {analyzeTrajectory, analyzeCapabilityTrajectory} from './governance/analyzer.js';
 export {createOpenAICompatibleModel, type OpenAICompatibleOptions} from './providers/openai-compatible.js';
 export type {AgentVersion} from './contracts/index.js';
 export type {TopologyDefinition, TopologyNode, TopologyEdge} from './topology/schema.js';

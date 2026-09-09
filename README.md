@@ -52,6 +52,7 @@ const report = await agent.evaluate(result, input);
 
 Wiki 记忆也支持自动维护：`maintainMemory(wiki, trace, options)` 会从轨迹中的显式 `knowledge/candidate` 事实提取候选、合并同主题冲突、生成带来源 Artifact 的 Proposal，并自动发布新的不可变 Release。冲突会保留为 `hypothesis`，旧 Release 始终保留，发布失败不会覆盖旧记忆。
 在 `AgentTemplate` 中设置 `memoryMaintenance: true`，每次成功执行收束后会自动让模型提取候选并维护 Agent Wiki；关闭时不会增加额外模型调用。
+组装后的 Agent 还会自动把每次执行写入 `memory/episodes.jsonl`，下一次运行先按输入检索相关经历，再将摘要和详情按预算注入模型上下文。轨迹治理可使用 `analyzeCapabilityTrajectory`，只分析 capability 插件，不把基础设施插件生成优化候选。
 
 复制 [text-agent.ts](src/templates/text-agent.ts)，填写 `AgentTemplate`：
 
